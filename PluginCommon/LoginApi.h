@@ -3,19 +3,9 @@
 #include <string>
 #include <vector>
 
-struct UserInfo
-{
-    std::string facePath;
-    std::string uname;
-    std::string vipType;
-};
+#include "ILogin.h"
 
-namespace adapter
-{
-struct BaseVideoView;
-}  // namespace adapter
-
-class AbstractLogin
+class AbstractLoginApi : public AbstractLogin
 {
 public:
     enum LoginSatus
@@ -41,19 +31,10 @@ public:
 
     using LoginResource = std::array<std::vector<uint8_t>, 7>;
 
-    virtual bool isSupportScanQrc() const
-    {
-        return true;
-    }
-
     // thread-safe
     virtual LoginSatus getLoginStatus() = 0;
     virtual bool getScanContext(std::string& content) = 0;
     virtual void loginSuccess() = 0;
-    virtual UserInfo getUserInfo(std::string dir) = 0;
-    virtual bool isLogin() const = 0;
-    virtual bool logout() = 0;
-    virtual std::vector<adapter::BaseVideoView> history() = 0;
 
     // resource
     virtual const LoginResource& allResources() const = 0;

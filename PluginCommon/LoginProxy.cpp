@@ -1,25 +1,18 @@
 #include "LoginProxy.h"
 #include "BaseVideoView.h"
 
-LoginProxy::LoginProxy(AbstractLogin& login)
+LoginProxy::LoginProxy(AbstractLoginApi& login)
     : AbstractLogin()
     , m_realLogin(login)
 {
+    setLoginWay(LoginWay::Api);
 }
 
-LoginProxy::LoginSatus LoginProxy::getLoginStatus()
+LoginProxy::LoginProxy(AbstractLoginWeb& login)
+    : AbstractLogin()
+    , m_realLogin(login)
 {
-    return m_realLogin.getLoginStatus();
-}
-
-bool LoginProxy::getScanContext(std::string& content)
-{
-    return m_realLogin.getScanContext(content);
-}
-
-void LoginProxy::loginSuccess()
-{
-    m_realLogin.loginSuccess();
+    setLoginWay(LoginWay::Web);
 }
 
 UserInfo LoginProxy::getUserInfo(std::string dir)
@@ -42,14 +35,9 @@ std::vector<adapter::BaseVideoView> LoginProxy::history()
     return m_realLogin.history();
 }
 
-const LoginProxy::LoginResource& LoginProxy::allResources() const
+AbstractLogin& LoginProxy::realLogin() const
 {
-    return m_realLogin.allResources();
-}
-
-const std::vector<uint8_t>& LoginProxy::resource(ResourceIndex index) const
-{
-    return m_realLogin.resource(index);
+    return m_realLogin;
 }
 
 int LoginProxy::type() const
