@@ -1,10 +1,11 @@
 #include "BaseVideoView.h"
+#include "Util/UrlProccess.h"
 
 std::string VideoInfoFull::getGuid() const
 {
     auto guid = videoView->Identifier + videoView->AlternateId + videoView->VideoId + downloadConfig->downloadDir +
                 std::to_string(static_cast<int>(downloadConfig->videoQuality)) + fileName();
-
+    guid = util::removeSpecialChars(guid);
     return guid;
 }
 
@@ -57,6 +58,8 @@ std::string VideoInfoFull::fileName() const
     {
         temp = videoView->Title;
     }
+
+    temp = util::removeSpecialChars(temp);
 
     return temp;
 }
