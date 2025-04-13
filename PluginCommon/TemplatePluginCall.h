@@ -2,16 +2,16 @@
 #include <PluginConfig.h>
 
 struct Plugin;
-typedef Plugin *PluginHandle;
-typedef const char *PSTR;
+typedef Plugin* PluginHandle;
+typedef const char* PSTR;
 
 #ifdef __cplusplus
 
-extern "C"
-{
+extern "C" {
 #endif
-    PluginHandle PLUGIN_API pluginInit();
-    void PLUGIN_API pluginDeinit();
+void PLUGIN_API initDir(const char* dir);
+PluginHandle PLUGIN_API pluginInit();
+void PLUGIN_API pluginDeinit();
 #ifdef __cplusplus
 }
 #endif
