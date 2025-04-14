@@ -12,6 +12,7 @@ extern "C" {
 void PLUGIN_API initDir(const char* dir);
 PluginHandle PLUGIN_API pluginInit();
 void PLUGIN_API pluginDeinit();
+void PLUGIN_API deinit();
 #ifdef __cplusplus
 }
 #endif
