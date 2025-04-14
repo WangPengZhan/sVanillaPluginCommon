@@ -1,5 +1,7 @@
 #pragma once
 
+// clang-format off
+
 // The way how the function is called
 #if !defined(PLUGIN_CALL)
 #if defined(_WIN32)
@@ -38,3 +40,5 @@
 #define PLUGIN_API PLUGIN_DLL_IMPORT PLUGIN_CALL
 #endif // PLUGIN_DLL_EXPORTS
 #endif
+
+// clang-format on

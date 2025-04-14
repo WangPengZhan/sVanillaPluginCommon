@@ -22,8 +22,7 @@ void freeObject(T* obj)
 void LoggerRegisterHelpper::registerLogger(std::string name, std::string path)
 {
     using rotating_file_sink_mt = spdlog::sinks::rotating_file_sink_mt;
-    auto sink = std::shared_ptr<rotating_file_sink_mt>(new rotating_file_sink_mt(path, logFileMaxSize, 100),
-                                                                    freeObject<rotating_file_sink_mt>);
+    auto sink = std::shared_ptr<rotating_file_sink_mt>(new rotating_file_sink_mt(path, logFileMaxSize, 100), freeObject<rotating_file_sink_mt>);
     auto new_logger = std::shared_ptr<spdlog::logger>(new spdlog::logger(std::move(name), std::move(sink)), freeObject<spdlog::logger>);
     spdlog::details::registry::instance().initialize_logger(new_logger);
 }
