@@ -56,7 +56,6 @@ FFmpegHelper& FFmpegHelper::globalInstance()
 
 void FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    // 检测上一次已经完成的合并移除
     {
         std::lock_guard lk(m_mutex);
         m_futures.remove_if([](const std::future<bool>& future) {
@@ -64,7 +63,6 @@ void FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std::function<vo
         });
     }
 
-    // 启动新的合并
     std::future<bool> result = std::async(std::launch::async, [mergeInfo, errorFunc = std::move(errorFunc), finishedFunc = std::move(finishedFunc)]() -> bool {
         QString executablePath = QApplication::applicationDirPath() + "/ffmpeg";
         QString ffmpegExecutable = QStandardPaths::findExecutable("ffmpeg", QStringList() << executablePath);
@@ -94,7 +92,6 @@ void FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std::function<vo
 
         if (ffmpegProcess.exitStatus() == QProcess::NormalExit && ffmpegProcess.exitCode() == 0)
         {
-            // ffmpeg正常结束且返回值为0，表示执行成功
             if (finishedFunc)
             {
                 finishedFunc();
@@ -104,7 +101,6 @@ void FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std::function<vo
         }
         else
         {
-            // 否则，表示ffmpeg执行失败
             std::string errorString = ffmpegProcess.errorString().toStdString();
             int exitCode = ffmpegProcess.exitCode();
             FFMPEG_LOG_ERROR("starting ffmpeg process error, errorCode: {}, msg: {}", exitCode, errorString);

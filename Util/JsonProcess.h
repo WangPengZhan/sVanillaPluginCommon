@@ -1,9 +1,5 @@
 #pragma once
-
-// namespace nlohmann
-//{
-// class json;
-// }
+#include <nlohmann/json_fwd.hpp>
 
 namespace util
 {
