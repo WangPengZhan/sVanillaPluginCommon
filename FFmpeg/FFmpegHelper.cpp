@@ -99,7 +99,12 @@ bool FFmpegHelper::startFFmpeg(const MergeInfo& mergeInfo, std::function<void()>
     QStringList ffmpegArg;
     ffmpegArg << "-i" << mergeInfo.audio.c_str() << "-i" << mergeInfo.video.c_str() << "-acodec" << "copy" << "-vcodec" << "copy" << "-f" << "mp4"
               << mergeInfo.targetVideo.c_str() << "-y";
-    return startFFmpeg(ffmpegArg, std::move(errorFunc), std::move(finishedFunc));
+    std::vector<std::string> ffmpegArgVec;
+    for (const auto& arg : ffmpegArg)
+    {
+        ffmpegArgVec.push_back(arg.toStdString());
+    }
+    return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
 void FFmpegHelper::startFFpmegDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
@@ -129,11 +134,21 @@ bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void(
     QStringList ffmpegArg;
     ffmpegArg << "-i" << QString("concat: %1").arg(tsFiles.join("|")) << "-c copy" << "-bsf:a aac_adtstoasc" << "-f" << "mp4" << mergeInfo.targetVideo.c_str()
               << "-y";
-    return startFFmpeg(ffmpegArg, std::move(errorFunc), std::move(finishedFunc));
+    std::vector<std::string> ffmpegArgVec;
+    for (const auto& arg : ffmpegArg)
+    {
+        ffmpegArgVec.push_back(arg.toStdString());
+    }
+    return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
-bool FFmpegHelper::startFFmpeg(const QStringList& ffmpegArg, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
+    QStringList ffmpegArg;
+    for (const auto& arg : ffmpegArgVec)
+    {
+        ffmpegArg << arg.c_str();
+    }
     QString executablePath = QApplication::applicationDirPath() + "/ffmpeg";
     QString ffmpegExecutable = QStandardPaths::findExecutable("ffmpeg", QStringList() << executablePath);
     qDebug() << ffmpegArg;

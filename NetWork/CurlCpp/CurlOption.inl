@@ -109,7 +109,7 @@ inline NoValueCurlOption<op>* NoValueCurlOption<op>::clone() const
 }
 
 template <>
-inline void CurlValueOption<CurlCookies>::setToCurl(CURL* handle) const
+inline void CurlValueOption<CurlCookieOpt>::setToCurl(CURL* handle) const
 {
     m_value.setToCurl(handle);
 }

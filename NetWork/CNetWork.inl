@@ -190,7 +190,7 @@ inline bool NetWork::post(const std::string& url, Response& response, const std:
     CurlOptions newOptions = options;
     auto postFields = std::make_shared<PostFields>(params);
     newOptions.insert({postFields->getOption(), postFields});
-    return post(url, response, options, optionsAdd);
+    return post(url, response, newOptions, optionsAdd);
 }
 
 template <typename Response>
@@ -200,7 +200,7 @@ inline bool NetWork::post(const std::string& url, Response& response, const std:
     CurlOptions newOptions = options;
     auto postFields = std::make_shared<PostFields>(params);
     newOptions.insert({postFields->getOption(), postFields});
-    return post(url, response, headers, headersAdd, options, optionsAdd);
+    return post(url, response, headers, headersAdd, newOptions, optionsAdd);
 }
 
 template <typename Response>
