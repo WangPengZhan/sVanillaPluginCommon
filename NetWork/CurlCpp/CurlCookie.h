@@ -15,6 +15,7 @@ constexpr char httpOnly_value[] = "HttpOnly";
 constexpr char set_cookie_header[] = "Set-Cookie: ";
 constexpr char set_cookies[] = "Set-Cookie";
 constexpr char same_site[] = "SameSite";
+constexpr char delete_content[] = "deleted";
 
 class CurlCookie
 {
@@ -62,7 +63,9 @@ public:
 
     static CurlCookie parseCookie(const std::string& content);
 
-private:
+    friend class CurlCookies;
+
+protected:
     std::string m_name;
     CookieValuaType m_cookieValue;
     std::string m_empty;

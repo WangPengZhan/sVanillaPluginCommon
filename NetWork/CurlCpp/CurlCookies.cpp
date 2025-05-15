@@ -15,7 +15,7 @@ void CurlCookies::setContent(const std::string& context)
     *this = std::move(parseCookie(context));
 }
 
-std::string CurlCookies::content() const
+std::string CurlCookies::cookieHeader(const std::string& domain) const
 {
     std::string cookieString;
     cookieString.reserve(256);
@@ -24,14 +24,26 @@ std::string CurlCookies::content() const
         return "";
     }
 
-    for (const auto& valuePair : m_cookieValue)
+    if (m_cookieValue.find(domain) == m_cookieValue.end())
     {
-        cookieString.append(valuePair.first);
-        if (!valuePair.second.empty())
+        return "";
+    }
+
+    for (const auto& valuePair : m_cookieValue.at(domain))
+    {
+        if (valuePair.second.empty())
         {
-            cookieString.append("=");
-            cookieString.append(valuePair.second);
+            continue;
         }
+
+        if (valuePair.first == domain_key || valuePair.first == expires_key || valuePair.first == path_key || valuePair.first == same_site)
+        {
+            continue;
+        }
+
+        cookieString.append(valuePair.first);
+        cookieString.append("=");
+        cookieString.append(valuePair.second);
         cookieString.append("; ");
     }
 
@@ -45,42 +57,58 @@ std::string CurlCookies::content() const
 
 CurlCookies::operator std::string() const
 {
-    return content();
-}
-
-CurlCookies& CurlCookies::addContext(const std::string& key, const std::string& value)
-{
-    if (!key.empty())
+    std::string cookieString;
+    for (const auto& pair : m_cookieValue)
     {
-        m_cookieValue[key] = value;
+        cookieString += pair.first;
+        cookieString += ": ";
+        cookieString += cookie(pair.first);
+        cookieString += "\r\n";
     }
-
-    return *this;
+    return cookieString;
 }
 
-CurlCookies& CurlCookies::addContext(const std::string& context)
+CurlCookie CurlCookies::cookie(const std::string& domain) const
 {
-    return addCurlCookies(parseCookie(context));
+    CurlCookie curlCookie;
+    if (contains(domain))
+    {
+        curlCookie.m_cookieValue = m_cookieValue.at(domain);
+    }
+    return curlCookie;
 }
 
 CurlCookies& CurlCookies::addCurlCookie(const CurlCookie& cookie)
 {
-    return addContext(cookie.name(), cookie.value());
+    for (const auto& valuePair : cookie.m_cookieValue)
+    {
+        if (valuePair.first == cookie.domain())
+        {
+            continue;
+        }
+
+        m_cookieValue[cookie.domain()][valuePair.first] = valuePair.second;
+    }
+
+    return *this;
 }
 
 CurlCookies& CurlCookies::addCurlCookies(const CurlCookies& cookieJar)
 {
     for (const auto& valuePair : cookieJar.m_cookieValue)
     {
-        m_cookieValue[valuePair.first] = valuePair.second;
+        for (const auto& cookiePair : valuePair.second)
+        {
+            m_cookieValue[valuePair.first][cookiePair.first] = cookiePair.second;
+        }
     }
 
     return *this;
 }
 
-bool CurlCookies::contains(const std::string& key) const
+bool CurlCookies::contains(const std::string& domain) const
 {
-    return m_cookieValue.find(key) != m_cookieValue.end();
+    return m_cookieValue.find(domain) != m_cookieValue.end();
 }
 
 const std::string& CurlCookies::value(const std::string& key) const
@@ -91,7 +119,9 @@ const std::string& CurlCookies::value(const std::string& key) const
     }
     else
     {
-        return m_cookieValue.at(key);
+        static std::string content;
+        content = cookie(key).content();
+        return content;
     }
 }
 
@@ -109,42 +139,11 @@ std::vector<std::string> CurlCookies::keys() const
     return ret;
 }
 
-void CurlCookies::setToCurl(CURL* handle) const
-{
-    auto strCookies = content();
-    if (handle && !strCookies.empty())
-    {
-        curl_easy_setopt(handle, CURLOPT_COOKIE, strCookies.c_str());
-    }
-}
-
-void CurlCookies::setToCurl(CurlEasy& easy) const
-{
-    setToCurl(easy.handle());
-}
-
 CurlCookies CurlCookies::parseCookie(const std::string& content)
 {
-    CurlCookies CurlCookies;
-    std::string_view content_view(content);
-
-    while (content_view.find("; ") != std::string_view::npos)
-    {
-        int pos = content_view.find("; ");
-        auto parseContent = content_view.substr(0, pos);
-        content_view = content_view.substr(pos + 2);
-        std::string_view key;
-        std::string_view value;
-        if (parseContent.find("=") != std::string_view::npos)
-        {
-            int pos = parseContent.find("=");
-            key = parseContent.substr(0, pos);
-            value = parseContent.substr(pos + 1);
-            CurlCookies.m_cookieValue.insert(std::make_pair(key, value));
-        }
-    }
-
-    return CurlCookies;
+    CurlCookies cookies;
+    cookies.addCurlCookie(CurlCookie::parseCookie(content));
+    return cookies;
 }
 
 }  // namespace network

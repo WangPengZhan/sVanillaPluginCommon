@@ -3,7 +3,7 @@
 
 #include <curl/curl.h>
 
-#include "CurlCookies.h"
+#include "CurlCookieOpt.h"
 
 namespace network
 {
@@ -78,7 +78,8 @@ using AcceptEncoding = CurlOption<const char*, CURLOPT_ACCEPT_ENCODING>;
 using SSLVerifyPeer = CurlOption<bool, CURLOPT_SSL_VERIFYPEER>;
 using SSLVerifyHost = CurlOption<bool, CURLOPT_SSL_VERIFYHOST>;
 using PostFields = CurlOption<std::string, CURLOPT_POSTFIELDS>;
-using CookieFileds = CurlOption<CurlCookies, CURLOPT_COOKIE>;
+using CookieFileds = CurlOption<CurlCookieOpt, CURLOPT_COOKIE>;
+using FollowLocation = CurlOption<long, CURLOPT_FOLLOWLOCATION>;
 
 }  // namespace network
 

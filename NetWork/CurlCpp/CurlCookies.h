@@ -10,31 +10,26 @@ namespace network
 {
 class CurlCookie;
 
-class CurlEasy;
-
 class CurlCookies
 {
 public:
-    using CurlCookiesValuaType = std::unordered_map<std::string, std::string>;
+    using CurlCookiesValuaType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
 
     CurlCookies() = default;
     CurlCookies(const std::string& context);
 
     void setContent(const std::string& context);
-    std::string content() const;
+    std::string cookieHeader(const std::string& domain) const;
     operator std::string() const;
 
-    CurlCookies& addContext(const std::string& key, const std::string& value);
-    CurlCookies& addContext(const std::string& context);
+    CurlCookie cookie(const std::string& domain) const;
+
     CurlCookies& addCurlCookie(const CurlCookie& cookie);
     CurlCookies& addCurlCookies(const CurlCookies& cookieJar);
 
-    bool contains(const std::string& key) const;
+    bool contains(const std::string& domain) const;
     const std::string& value(const std::string& key) const;
     std::vector<std::string> keys() const;
-
-    void setToCurl(CURL* handle) const;
-    void setToCurl(CurlEasy& easy) const;
 
     static CurlCookies parseCookie(const std::string& content);
 

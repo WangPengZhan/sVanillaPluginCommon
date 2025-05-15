@@ -2,6 +2,7 @@
 #include <string>
 #include <future>
 #include <functional>
+#include <vector>
 
 #include "FFmpegConfig.h"
 
@@ -44,7 +45,7 @@ public:
     bool startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
     void startFFpmegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
 
-    bool startFFmpeg(const QStringList& ffmpegArg, std::function<void()> errorFunc, std::function<void()> finishedFunc);
+    bool startFFmpeg(const std::vector<std::string>& ffmpegArg, std::function<void()> errorFunc, std::function<void()> finishedFunc);
 
     void closeFFmpeg();
 

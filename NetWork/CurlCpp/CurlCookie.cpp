@@ -1,7 +1,62 @@
 #include "CurlCookie.h"
 
+#include <algorithm>
+
 namespace network
 {
+
+namespace
+{
+std::string toLower(std::string str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    return str;
+}
+
+std::string preprocessKey(std::string key)
+{
+    auto lowKey = toLower(key);
+    auto compareKey = toLower(domain_key);
+    if (compareKey == lowKey)
+    {
+        return domain_key;
+    }
+
+    compareKey = toLower(expires_key);
+    if (compareKey == lowKey)
+    {
+        return expires_key;
+    }
+
+    compareKey = toLower(path_key);
+    if (compareKey == lowKey)
+    {
+        return path_key;
+    }
+
+    compareKey = toLower(secure_value);
+    if (compareKey == lowKey)
+    {
+        return secure_value;
+    }
+
+    compareKey = toLower(httpOnly_value);
+    if (compareKey == lowKey)
+    {
+        return httpOnly_value;
+    }
+
+    compareKey = toLower(same_site);
+    if (compareKey == lowKey)
+    {
+        return same_site;
+    }
+
+    return key;
+}
+}  // namespace
 
 std::string CurlCookie::toString(SameSiteSend send)
 {
@@ -322,22 +377,40 @@ CurlCookie CurlCookie::parseCookie(const std::string& content)
     }
 
     bool hasName = false;
-    while (content_view.find("; ") != std::string_view::npos)
+    while (true)
     {
-        int pos = content_view.find("; ");
-        auto parseContent = content_view.substr(0, pos);
-        content_view = content_view.substr(pos + 2);
+        size_t pos = content_view.find("; ");
+        std::string_view parseContent;
+
+        if (pos != std::string_view::npos)
+        {
+            parseContent = content_view.substr(0, pos);
+            content_view = content_view.substr(pos + 2);
+        }
+        else
+        {
+            parseContent = content_view;
+            content_view = std::string_view();  // clear
+        }
+
+        if (parseContent.empty())
+        {
+            break;
+        }
+
         std::string_view key;
         std::string_view value;
-        if (parseContent.find("=") != std::string_view::npos)
+        size_t eq_pos = parseContent.find("=");
+
+        if (eq_pos != std::string_view::npos)
         {
-            int pos = parseContent.find("=");
-            key = parseContent.substr(0, pos);
-            value = parseContent.substr(pos + 1);
+            key = parseContent.substr(0, eq_pos);
+            value = parseContent.substr(eq_pos + 1);
         }
         else
         {
             key = parseContent;
+            value = std::string_view();
         }
 
         if (!isDefaultKey(key) && !hasName)
@@ -346,7 +419,21 @@ CurlCookie CurlCookie::parseCookie(const std::string& content)
             hasName = true;
         }
 
-        curlCookie.m_cookieValue.insert(std::make_pair(key, value));
+        std::string realkey = preprocessKey(std::string(key));
+        std::string realValue = std::string(value);
+        if (toLower(realValue) == delete_content)
+        {
+            curlCookie.m_cookieValue.erase(realkey);
+        }
+        else
+        {
+            curlCookie.m_cookieValue.insert(std::make_pair(realkey, realValue));
+        }
+
+        if (content_view.empty())
+        {
+            break;
+        }
     }
 
     return curlCookie;

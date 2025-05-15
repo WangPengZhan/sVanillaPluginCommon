@@ -8,7 +8,28 @@
 
 namespace network
 {
+namespace
+{
+std::string toLower(std::string str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+    return str;
+}
 
+std::string preprocessKey(std::string key)
+{
+    auto lowKey = toLower(key);
+    auto compareKey = toLower(set_cookies);
+    if (compareKey == lowKey)
+    {
+        return set_cookies;
+    }
+
+    return key;
+}
+}  // namespace
 std::string to_string(HttpMethod method)
 {
     static std::unordered_map<HttpMethod, std::string> methodMap = {
@@ -121,7 +142,7 @@ NetWork::ParamType NetWork::parseHeader(const std::string& header)
 
             std::string key(trim(key_view));
             std::string value(trim(value_view));
-
+            key = preprocessKey(key);
             if (headers.find(key) == headers.end())
             {
                 headers.insert({key, value});
