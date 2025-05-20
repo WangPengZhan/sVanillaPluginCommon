@@ -28,9 +28,13 @@ public:
 
     virtual ~AbstractLogin() = default;
 
-    virtual UserInfo getUserInfo(std::string dir) = 0;
     virtual bool isLogin() const = 0;
+    virtual std::string cookies() const = 0;
+    virtual void setCookies(std::string cookies) = 0;
+    virtual bool refreshCookies(std::string cookies) = 0;
     virtual bool logout() = 0;
+
+    virtual UserInfo getUserInfo(std::string dir) = 0;
     virtual std::vector<adapter::BaseVideoView> history() = 0;
 
     virtual int type() const = 0;

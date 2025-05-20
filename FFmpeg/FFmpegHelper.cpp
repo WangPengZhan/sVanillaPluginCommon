@@ -10,6 +10,8 @@
 #include <QProcess>
 #include <QString>
 
+#include "Util/LocaleHelper.h"
+
 #include "FFmpegHelper.h"
 #include "FFmpegLog.h"
 
@@ -28,13 +30,15 @@ bool FFmpegHelper::mergeVideo(const MergeInfo& mergeInfo)
     return FFmpegHelper::mergeVideo(
         mergeInfo, [] {},
         [mergeInfo] {
-            auto path = std::filesystem::u8path(mergeInfo.audio);
+            auto audio = util::utf8ToLocale(mergeInfo.audio);
+            auto path = std::filesystem::path(audio);
             if (std::filesystem::exists(path))
             {
                 std::filesystem::remove(path);
             }
 
-            path = std::filesystem::u8path(mergeInfo.video);
+            auto video = util::utf8ToLocale(mergeInfo.video);
+            path = std::filesystem::path(video);
             if (std::filesystem::exists(path))
             {
                 std::filesystem::remove(path);
@@ -62,13 +66,15 @@ void FFmpegHelper::mergeVideoDetach(const MergeInfo& mergeInfo)
     return FFmpegHelper::mergeVideoDetach(
         mergeInfo, [] {},
         [mergeInfo] {
-            auto path = std::filesystem::u8path(mergeInfo.audio);
+            auto audio = util::utf8ToLocale(mergeInfo.audio);
+            auto path = std::filesystem::path(audio);
             if (std::filesystem::exists(path))
             {
                 std::filesystem::remove(path);
             }
 
-            path = std::filesystem::u8path(mergeInfo.video);
+            auto video = util::utf8ToLocale(mergeInfo.video);
+            path = std::filesystem::path(video);
             if (std::filesystem::exists(path))
             {
                 std::filesystem::remove(path);

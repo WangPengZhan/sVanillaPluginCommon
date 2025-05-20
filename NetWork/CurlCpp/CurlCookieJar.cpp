@@ -71,7 +71,7 @@ CurlCookies CurlCookieJar::toCookies() const
         std::stringstream buffer;
         buffer << inputFile.rdbuf();
 
-        cookies.setContent(buffer.str());
+        cookies = CurlCookies::parseCookies(buffer.str());
     }
 
     return cookies;

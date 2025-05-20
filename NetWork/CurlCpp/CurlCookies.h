@@ -18,7 +18,6 @@ public:
     CurlCookies() = default;
     CurlCookies(const std::string& context);
 
-    void setContent(const std::string& context);
     std::string cookieHeader(const std::string& domain) const;
     operator std::string() const;
 
@@ -31,7 +30,7 @@ public:
     const std::string& value(const std::string& key) const;
     std::vector<std::string> keys() const;
 
-    static CurlCookies parseCookie(const std::string& content);
+    static CurlCookies parseCookies(const std::string& content);
 
 private:
     CurlCookiesValuaType m_cookieValue;

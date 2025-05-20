@@ -12,11 +12,11 @@ std::string localeToUtf8(const std::string& localeStr)
 #ifdef _WIN32
     int len = MultiByteToWideChar(GetACP(), 0, localeStr.data(), localeStr.size(), nullptr, 0);
     std::wstring wsz_utf8(len, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, localeStr.data(), localeStr.size(), &wsz_utf8[0], len);
+    MultiByteToWideChar(GetACP(), 0, localeStr.data(), localeStr.size(), &wsz_utf8[0], len);
 
     len = WideCharToMultiByte(CP_UTF8, 0, wsz_utf8.data(), wsz_utf8.size(), nullptr, 0, nullptr, nullptr);
     std::string strTemp(len, '\0');
-    WideCharToMultiByte(GetACP(), 0, wsz_utf8.data(), wsz_utf8.size(), &strTemp[0], len, nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, wsz_utf8.data(), wsz_utf8.size(), &strTemp[0], len, nullptr, nullptr);
 
 #else
     std::string strTemp = localeStr;

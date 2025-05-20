@@ -25,6 +25,21 @@ bool LoginProxy::isLogin() const
     return m_realLogin.isLogin();
 }
 
+std::string LoginProxy::cookies() const
+{
+    return m_realLogin.cookies();
+}
+
+void LoginProxy::setCookies(std::string cookies)
+{
+    m_realLogin.setCookies(std::move(cookies));
+}
+
+bool LoginProxy::refreshCookies(std::string cookies)
+{
+    return m_realLogin.refreshCookies(std::move(cookies));
+}
+
 bool LoginProxy::logout()
 {
     return m_realLogin.logout();

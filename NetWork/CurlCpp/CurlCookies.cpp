@@ -7,12 +7,7 @@ namespace network
 
 CurlCookies::CurlCookies(const std::string& context)
 {
-    setContent(context);
-}
-
-void CurlCookies::setContent(const std::string& context)
-{
-    *this = std::move(parseCookie(context));
+    *this = parseCookies(context);
 }
 
 std::string CurlCookies::cookieHeader(const std::string& domain) const
@@ -139,10 +134,31 @@ std::vector<std::string> CurlCookies::keys() const
     return ret;
 }
 
-CurlCookies CurlCookies::parseCookie(const std::string& content)
+CurlCookies CurlCookies::parseCookies(const std::string& content)
 {
     CurlCookies cookies;
-    cookies.addCurlCookie(CurlCookie::parseCookie(content));
+
+    std::string_view str(content);
+    while (!str.empty())
+    {
+        size_t lineEnd = str.find("\r\n");
+        std::string_view line = (lineEnd == std::string_view::npos) ? str : str.substr(0, lineEnd);
+
+        size_t sep = line.find(": ");
+        if (sep != std::string_view::npos)
+        {
+            std::string_view key = line.substr(0, sep);
+            std::string_view value = line.substr(sep + 2);
+            cookies.addCurlCookie(CurlCookie::parseCookie(std::string(value)));
+        }
+
+        if (lineEnd == std::string_view::npos)
+        {
+            break;
+        }
+        str.remove_prefix(lineEnd + 2);
+    }
+
     return cookies;
 }
 

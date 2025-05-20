@@ -14,8 +14,13 @@ public:
     ~LoginProxy() = default;
 
     UserInfo getUserInfo(std::string dir) override;
+
     bool isLogin() const override;
+    std::string cookies() const override;
+    bool refreshCookies(std::string cookies) override;
+    void setCookies(std::string cookies) override;
     bool logout() override;
+
     std::vector<adapter::BaseVideoView> history() override;
 
     AbstractLogin& realLogin() const;
