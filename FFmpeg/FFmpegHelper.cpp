@@ -1,8 +1,8 @@
 #include <chrono>
 #include <future>
-#include <thread>
 #include <utility>
 #include <filesystem>
+#include <list>
 
 #include <QStandardPaths>
 #include <QApplication>
@@ -18,6 +18,29 @@
 namespace ffmpeg
 {
 
+void removeMergeBeforeFile(const MergeInfo& mergeInfo)
+{
+    auto audio = util::utf8ToLocale(mergeInfo.audio);
+    auto path = std::filesystem::path(audio);
+    if (std::filesystem::exists(path))
+    {
+        std::filesystem::remove(path);
+    }
+
+    auto video = util::utf8ToLocale(mergeInfo.video);
+    path = std::filesystem::path(video);
+    if (std::filesystem::exists(path))
+    {
+        std::filesystem::remove(path);
+    }
+    auto subtitle = util::utf8ToLocale(mergeInfo.subtitle);
+    path = std::filesystem::path(subtitle);
+    if (std::filesystem::exists(path))
+    {
+        std::filesystem::remove(path);
+    }
+}
+
 FFmpegHelper::FFmpegHelper() = default;
 
 FFmpegHelper::~FFmpegHelper()
@@ -28,21 +51,9 @@ FFmpegHelper::~FFmpegHelper()
 bool FFmpegHelper::mergeVideo(const MergeInfo& mergeInfo)
 {
     return FFmpegHelper::mergeVideo(
-        mergeInfo, [] {},
-        [mergeInfo] {
-            auto audio = util::utf8ToLocale(mergeInfo.audio);
-            auto path = std::filesystem::path(audio);
-            if (std::filesystem::exists(path))
-            {
-                std::filesystem::remove(path);
-            }
-
-            auto video = util::utf8ToLocale(mergeInfo.video);
-            path = std::filesystem::path(video);
-            if (std::filesystem::exists(path))
-            {
-                std::filesystem::remove(path);
-            }
+        mergeInfo, []() {},
+        [mergeInfo]() {
+            removeMergeBeforeFile(mergeInfo);
         });
 }
 
@@ -66,19 +77,7 @@ void FFmpegHelper::mergeVideoDetach(const MergeInfo& mergeInfo)
     return FFmpegHelper::mergeVideoDetach(
         mergeInfo, [] {},
         [mergeInfo] {
-            auto audio = util::utf8ToLocale(mergeInfo.audio);
-            auto path = std::filesystem::path(audio);
-            if (std::filesystem::exists(path))
-            {
-                std::filesystem::remove(path);
-            }
-
-            auto video = util::utf8ToLocale(mergeInfo.video);
-            path = std::filesystem::path(video);
-            if (std::filesystem::exists(path))
-            {
-                std::filesystem::remove(path);
-            }
+            removeMergeBeforeFile(mergeInfo);
         });
 }
 
@@ -103,8 +102,40 @@ std::future<bool> FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std
 bool FFmpegHelper::startFFmpeg(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
     QStringList ffmpegArg;
-    ffmpegArg << "-i" << mergeInfo.audio.c_str() << "-i" << mergeInfo.video.c_str() << "-acodec" << "copy" << "-vcodec" << "copy" << "-f" << "mp4"
-              << mergeInfo.targetVideo.c_str() << "-y";
+    QStringList mapArgs;
+    int index = 0;
+    int videoIndex = 0;
+
+    if (!mergeInfo.video.empty())
+    {
+        ffmpegArg << "-i" << mergeInfo.video.c_str();
+        videoIndex = index;
+        mapArgs << "-map" << QString::number(index++) + ":v?";
+    }
+
+    if (!mergeInfo.audio.empty())
+    {
+        ffmpegArg << "-i" << mergeInfo.audio.c_str();
+        mapArgs << "-map" << QString::number(index++) + ":a?";
+    }
+    else
+    {
+        mapArgs << "-map" << QString::number(videoIndex) + ":a?";
+    }
+
+    if (!mergeInfo.subtitle.empty())
+    {
+        ffmpegArg << "-i" << mergeInfo.subtitle.c_str();
+        mapArgs << "-map" << QString::number(index++) + ":s?";
+    }
+    else
+    {
+        mapArgs << "-map" << QString::number(videoIndex) + ":s?";
+    }
+
+    ffmpegArg << mapArgs << "-c:v" << "copy" << "-c:a" << "copy" << "-c:s" << "mov_text" << "-y";
+    ffmpegArg << mergeInfo.targetVideo.c_str();
+
     std::vector<std::string> ffmpegArgVec;
     for (const auto& arg : ffmpegArg)
     {
@@ -130,16 +161,47 @@ void FFmpegHelper::startFFpmegDetach(const MergeInfo& mergeInfo, std::function<v
     }
 }
 
+bool FFmpegHelper::mergeVideo(const MergeTsInfo& mergeInfo)
+{
+    return FFmpegHelper::mergeVideo(mergeInfo, []() {}, []() {});
+}
+
+bool FFmpegHelper::mergeVideo(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+{
+    return FFmpegHelper::globalInstance().startFFmpeg(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+}
+
+std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeTsInfo& mergeInfo)
+{
+    return std::async(std::launch::async, static_cast<bool (*)(const MergeTsInfo&)>(&FFmpegHelper::mergeVideo), mergeInfo);
+}
+
+std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+{
+    return FFmpegHelper::globalInstance().startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+}
+
+void FFmpegHelper::mergeVideoDetach(const MergeTsInfo& mergeInfo)
+{
+    return FFmpegHelper::mergeVideoDetach(mergeInfo, []() {}, []() {});
+}
+
+void FFmpegHelper::mergeVideoDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+{
+    return FFmpegHelper::globalInstance().startFFpmegDetach(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+}
+
+std::future<bool> FFmpegHelper::startFFpmegAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+{
+    return std::async(std::launch::async, [this, mergeInfo, errorFunc = std::move(errorFunc), finishedFunc = std::move(finishedFunc)]() -> bool {
+        return startFFmpeg(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    });
+}
+
 bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    QStringList tsFiles;
-    for (const auto& file : mergeInfo.tsFiles)
-    {
-        tsFiles << file.c_str();
-    }
     QStringList ffmpegArg;
-    ffmpegArg << "-i" << QString("concat: %1").arg(tsFiles.join("|")) << "-c copy" << "-bsf:a aac_adtstoasc" << "-f" << "mp4" << mergeInfo.targetVideo.c_str()
-              << "-y";
+    ffmpegArg << "-f" << "concat" << "-safe" << "0" << "-i" << mergeInfo.concatFile.c_str() << "-c" << "copy" << mergeInfo.targetVideo.c_str() << "-y";
     std::vector<std::string> ffmpegArgVec;
     for (const auto& arg : ffmpegArg)
     {
@@ -148,7 +210,25 @@ bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void(
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
-bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+void FFmpegHelper::startFFpmegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+{
+    {
+        std::lock_guard lk(m_mutex);
+        m_futures.remove_if([](const std::future<bool>& future) {
+            return future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+        });
+    }
+
+    std::future<bool> result = startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+
+    {
+        std::lock_guard lk(m_mutex);
+        m_futures.push_back(std::move(result));
+    }
+}
+
+bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std::function<void()> errorFunc, std::function<void()> finishedFunc,
+                               const std::string& ffmpegWorkDir)
 {
     QStringList ffmpegArg;
     for (const auto& arg : ffmpegArgVec)
@@ -163,6 +243,23 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     QProcess ffmpegProcess;
     ffmpegProcess.setProgram(ffmpegExecutable);
     ffmpegProcess.setArguments(ffmpegArg);
+    if (!ffmpegWorkDir.empty())
+    {
+        QString workDir = QString::fromStdString(ffmpegWorkDir);
+        if (std::filesystem::exists(workDir.toStdString()))
+        {
+            ffmpegProcess.setWorkingDirectory(workDir);
+        }
+        else
+        {
+            FFMPEG_LOG_ERROR("ffmpeg working directory does not exist: {}", workDir.toStdString());
+            if (errorFunc)
+            {
+                errorFunc();
+            }
+            return false;
+        }
+    }
     ffmpegProcess.start();
     ffmpegProcess.waitForFinished(-1);
 
