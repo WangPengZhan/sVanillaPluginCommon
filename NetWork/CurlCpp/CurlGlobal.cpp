@@ -4,6 +4,13 @@
 
 namespace network
 {
+
+CurlGlobal& CurlGlobal::instance()
+{
+    static CurlGlobal instance;
+    return instance;
+}
+
 CurlGlobal::CurlGlobal()
 {
     curl_global_init(CURL_GLOBAL_ALL);

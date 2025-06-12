@@ -20,6 +20,11 @@ UserInfo LoginProxy::getUserInfo(std::string dir)
     return m_realLogin.getUserInfo(dir);
 }
 
+bool LoginProxy::supportLogin() const
+{
+    return m_realLogin.supportLogin();
+}
+
 bool LoginProxy::isLogin() const
 {
     return m_realLogin.isLogin();

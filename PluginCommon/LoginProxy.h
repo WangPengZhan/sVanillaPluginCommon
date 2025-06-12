@@ -15,6 +15,7 @@ public:
 
     UserInfo getUserInfo(std::string dir) override;
 
+    bool supportLogin() const override;
     bool isLogin() const override;
     std::string cookies() const override;
     bool refreshCookies(std::string cookies) override;

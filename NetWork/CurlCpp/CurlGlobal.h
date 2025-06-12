@@ -6,6 +6,9 @@ namespace network
 class CurlGlobal
 {
 public:
+    static CurlGlobal& instance();
+
+private:
     CurlGlobal();
     CurlGlobal(long flag);
     ~CurlGlobal();

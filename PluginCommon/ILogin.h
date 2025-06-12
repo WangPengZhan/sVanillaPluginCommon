@@ -28,6 +28,7 @@ public:
 
     virtual ~AbstractLogin() = default;
 
+    virtual bool supportLogin() const = 0;
     virtual bool isLogin() const = 0;
     virtual std::string cookies() const = 0;
     virtual void setCookies(std::string cookies) = 0;
