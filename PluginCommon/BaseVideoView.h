@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 #include <unordered_map>
 
 namespace adapter
@@ -27,6 +28,7 @@ struct BaseVideoView
     std::string Description;
     std::string PublishDate;
     std::string PlayListTitle;
+    std::string fileExtension{".mp4"};
     FileType fileType{FileType::Video};
     int pluginType = {-1};
 };
@@ -34,6 +36,14 @@ struct BaseVideoView
 using VideoView = std::vector<BaseVideoView>;
 
 using Views = std::vector<std::shared_ptr<BaseVideoView>>;
+
+constexpr char id[] = "id";
+constexpr char title[] = "title";
+constexpr char publisher[] = "publisher";
+constexpr char publishdata[] = "publishdate";
+constexpr char date[] = "date";
+constexpr char time[] = "time";
+constexpr char datetime[] = "datetime";
 }  // namespace adapter
 
 enum class VideQuality
@@ -57,17 +67,30 @@ struct DownloadConfig
     std::string nameRule = "$title$";
 };
 
+struct DateTimeResolver
+{
+    std::string date;
+    std::string time;
+    std::string dateTime;
+
+    void generater();
+};
+
 struct VideoInfoFull
 {
     std::shared_ptr<DownloadConfig> downloadConfig;
     std::shared_ptr<adapter::BaseVideoView> videoView;
 
     std::string getGuid() const;
-    std::unordered_map<std::string, std::string> nameRules() const;
-    std::string fileName() const;
+    std::string fileName(bool update = false) const;
     std::string coverPath() const;
+    std::string parseNameRules(const std::string& ruleName) const;
 
     static const std::vector<std::string> ruleList;
+    static const std::vector<std::string> showRuleList;
+    static const std::map<std::string, std::string> ruleMap;
+
+    mutable DateTimeResolver dateTimeResolver;
 };
 
 struct PluginMessage
