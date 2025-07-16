@@ -17,7 +17,6 @@ void util::JsonProcess::removeNullValues(nlohmann::json& jsonObj)
         {
             if (it.value().is_null())
             {
-                std::cout << "key: " << it.key() << "value" << it.value().dump();
                 it = jsonObj.erase(it);
             }
             else

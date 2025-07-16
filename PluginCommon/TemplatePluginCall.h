@@ -3,7 +3,6 @@
 
 struct Plugin;
 typedef Plugin* PluginHandle;
-typedef const char* PSTR;
 
 #ifdef __cplusplus
 
