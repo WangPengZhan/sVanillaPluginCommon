@@ -24,6 +24,7 @@ struct BaseVideoView
     std::string Identifier;
     std::string IdType;
     std::string ParentId;
+    std::string ParentIdType;
     std::string Title;
     std::string Publisher;
     std::string Cover;
@@ -36,7 +37,7 @@ struct BaseVideoView
     std::string Option2;
     std::string Option3;
     FileType fileType{FileType::Video};
-    int pluginType = {-1};
+    int pluginId = {-1};
 };
 
 using VideoView = std::vector<BaseVideoView>;

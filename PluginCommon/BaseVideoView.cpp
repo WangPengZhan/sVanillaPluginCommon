@@ -64,7 +64,7 @@ void DateTimeResolver::generator()
 std::string VideoInfoFull::getGuid() const
 {
     auto guid = videoView->Identifier + videoView->IdType + videoView->ParentId + downloadConfig->downloadDir +
-                std::to_string(static_cast<int>(downloadConfig->videoQuality)) + fileName();
+                std::to_string(static_cast<int>(downloadConfig->videoQuality)) + videoView->Option1 + videoView->Option2 + videoView->Option3 + fileName();
     guid = util::removeSpecialChars(guid);
     return guid;
 }
