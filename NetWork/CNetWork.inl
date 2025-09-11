@@ -5,13 +5,13 @@
 namespace network
 {
 template <typename Response>
-inline bool NetWork::request(const std::string& url, Response& response, HttpMethod medthod)
+inline bool NetWork::request(const std::string& url, Response& response, HttpMethod method)
 {
     CurlEasy easy;
     CurlResponseWrapper writer(response);
 
-    std::string method = to_string(medthod);
-    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, method.c_str());
+    std::string strMethod = to_string(method);
+    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, strMethod.c_str());
     curl_easy_setopt(easy.handle(), CURLOPT_URL, url.c_str());
     auto holdHeader = setToCurl(easy, CurlHeader(), true);
     setToCurl(easy, CurlOptions(), true);
@@ -25,13 +25,13 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
 }
 
 template <typename Response>
-inline bool NetWork::request(const std::string& url, Response& response, HttpMethod medthod, const CurlHeader& headers, bool headersAdd)
+inline bool NetWork::request(const std::string& url, Response& response, HttpMethod method, const CurlHeader& headers, bool headersAdd)
 {
     CurlEasy easy;
     CurlResponseWrapper writer(response);
 
-    std::string method = to_string(medthod);
-    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, method.c_str());
+    std::string strMethod = to_string(method);
+    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, strMethod.c_str());
     curl_easy_setopt(easy.handle(), CURLOPT_URL, url.c_str());
     auto holdHeader = setToCurl(easy, headers, headersAdd);
     setToCurl(easy, CurlOptions(), true);
@@ -45,13 +45,13 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
 }
 
 template <typename Response>
-inline bool NetWork::request(const std::string& url, Response& response, HttpMethod medthod, const CurlOptions& options, bool optionsAdd)
+inline bool NetWork::request(const std::string& url, Response& response, HttpMethod method, const CurlOptions& options, bool optionsAdd)
 {
     CurlEasy easy;
     CurlResponseWrapper writer(response);
 
-    std::string method = to_string(medthod);
-    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, method.c_str());
+    std::string strMethod = to_string(method);
+    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, strMethod.c_str());
     curl_easy_setopt(easy.handle(), CURLOPT_URL, url.c_str());
     auto holdHeader = setToCurl(easy, CurlHeader(), true);
     setToCurl(easy, options, optionsAdd);
@@ -65,14 +65,14 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
 }
 
 template <typename Response>
-inline bool NetWork::request(const std::string& url, Response& response, HttpMethod medthod, const CurlHeader& headers, bool headersAdd,
+inline bool NetWork::request(const std::string& url, Response& response, HttpMethod method, const CurlHeader& headers, bool headersAdd,
                              const CurlOptions& options, bool optionsAdd)
 {
     CurlEasy easy;
     CurlResponseWrapper writer(response);
 
-    std::string method = to_string(medthod);
-    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, method.c_str());
+    std::string strMethod = to_string(method);
+    curl_easy_setopt(easy.handle(), CURLOPT_CUSTOMREQUEST, strMethod.c_str());
     curl_easy_setopt(easy.handle(), CURLOPT_URL, url.c_str());
     auto holdHeader = setToCurl(easy, headers, headersAdd);
     setToCurl(easy, options, optionsAdd);

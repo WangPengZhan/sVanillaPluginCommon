@@ -26,7 +26,7 @@ public:
 
     AbstractLogin& realLogin() const;
 
-    int type() const override;
+    int pluginId() const override;
 
 protected:
     AbstractLogin& m_realLogin;

@@ -45,7 +45,7 @@ void AriaDownloader::start()
 void AriaDownloader::stop()
 {
     aria2net::AriaClient::globalClient().RemoveAsync(m_gid);
-    m_status = Waitting;
+    m_status = Waiting;
     DOWNLOAD_LOG_INFO("AriaDownloader stop gid: {}", m_gid);
 }
 

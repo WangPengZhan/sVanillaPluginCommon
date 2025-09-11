@@ -14,7 +14,7 @@ struct DownloadInfo
     std::string stage;
 };
 
-struct ResourseInfo
+struct ResourceInfo
 {
     std::list<std::string> videoUris;
     std::list<std::string> audioUris;
@@ -26,7 +26,7 @@ class AbstractDownloader
 public:
     enum Status
     {
-        Waitting,
+        Waiting,
         Ready,
         Downloading,
         Pause,
@@ -55,7 +55,7 @@ public:
     Status status() const;
 
 protected:
-    std::atomic<Status> m_status = Waitting;
+    std::atomic<Status> m_status = Waiting;
     std::string m_guid;
     std::string m_stage;
     DownloadInfo m_info;

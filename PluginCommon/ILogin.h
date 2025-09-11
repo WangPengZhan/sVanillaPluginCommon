@@ -38,7 +38,7 @@ public:
     virtual UserInfo getUserInfo(std::string dir) = 0;
     virtual std::vector<adapter::BaseVideoView> history() = 0;
 
-    virtual int type() const = 0;
+    virtual int pluginId() const = 0;
 
     virtual LoginWay loginWay() const;
 

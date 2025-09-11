@@ -8,13 +8,13 @@
 class AbstractLoginApi : public AbstractLogin
 {
 public:
-    enum LoginSatus
+    enum LoginStatus
     {
         Unknow,
         Error,
         NoScan,
         Timeout,
-        ScanedNoAck,
+        ScannedNoAck,
         Success
     };
 
@@ -32,16 +32,13 @@ public:
     using LoginResource = std::array<std::vector<uint8_t>, 7>;
 
     // thread-safe
-    virtual LoginSatus getLoginStatus() = 0;
+    virtual LoginStatus getLoginStatus() = 0;
     virtual bool getScanContext(std::string& content) = 0;
     virtual void loginSuccess() = 0;
 
     // resource
     virtual const LoginResource& allResources() const = 0;
     virtual const std::vector<uint8_t>& resource(ResourceIndex index) const = 0;
-
-    // type
-    virtual int type() const = 0;
 
 protected:
     std::vector<uint8_t> m_emptyString;

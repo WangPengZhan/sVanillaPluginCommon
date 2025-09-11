@@ -13,7 +13,7 @@ class CurlCookie;
 class CurlCookies
 {
 public:
-    using CurlCookiesValuaType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+    using CurlCookiesValueType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
 
     CurlCookies() = default;
     CurlCookies(const std::string& context);
@@ -33,7 +33,7 @@ public:
     static CurlCookies parseCookies(const std::string& content);
 
 private:
-    CurlCookiesValuaType m_cookieValue;
+    CurlCookiesValueType m_cookieValue;
     std::string m_empty;
 };
 

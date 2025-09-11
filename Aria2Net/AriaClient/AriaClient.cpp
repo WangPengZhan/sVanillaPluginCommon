@@ -54,13 +54,13 @@ SystemListMethods AriaClient::listMethodsAsync()
     return Call<SystemListNotifications>("system.listMethods", {});
 }
 
-std::list<SystemMulticall> AriaClient::multicallAsync(const std::list<SystemMulticallMathod>& systemMulticallMathods)
+std::list<SystemMulticall> AriaClient::multicallAsync(const std::list<SystemMulticallMethod>& systemMulticallMethods)
 {
-    auto jsonResult = Call<nlohmann::json>("system.listMethods", {systemMulticallMathods});
+    auto jsonResult = Call<nlohmann::json>("system.listMethods", {systemMulticallMethods});
     std::list<SystemMulticall> result;
-    for (const auto& sigleJson : jsonResult)
+    for (const auto& singleJson : jsonResult)
     {
-        result.emplace_back(sigleJson);
+        result.emplace_back(singleJson);
     }
     return result;
 }

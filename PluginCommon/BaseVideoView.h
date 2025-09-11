@@ -13,14 +13,17 @@ enum FileType
     Video,
     Image,
     Audio,
+    PDF,
+    Markdown,
+    Text,
     File,
 };
 
 struct BaseVideoView
 {
     std::string Identifier;
-    std::string AlternateId;
-    std::string VideoId;
+    std::string IdType;
+    std::string ParentId;
     std::string Title;
     std::string Publisher;
     std::string Cover;
@@ -29,6 +32,9 @@ struct BaseVideoView
     std::string PublishDate;
     std::string PlayListTitle;
     std::string fileExtension{".mp4"};
+    std::string Option1;
+    std::string Option2;
+    std::string Option3;
     FileType fileType{FileType::Video};
     int pluginType = {-1};
 };
@@ -40,7 +46,7 @@ using Views = std::vector<std::shared_ptr<BaseVideoView>>;
 constexpr char id[] = "id";
 constexpr char title[] = "title";
 constexpr char publisher[] = "publisher";
-constexpr char publishdata[] = "publishdate";
+constexpr char publishdate[] = "publishdate";
 constexpr char date[] = "date";
 constexpr char time[] = "time";
 constexpr char datetime[] = "datetime";
@@ -73,7 +79,7 @@ struct DateTimeResolver
     std::string time;
     std::string dateTime;
 
-    void generater();
+    void generator();
 };
 
 struct VideoInfoFull

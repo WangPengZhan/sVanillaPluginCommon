@@ -42,7 +42,7 @@ std::string showTag(const std::string& text)
     return result;
 }
 
-void DateTimeResolver::generater()
+void DateTimeResolver::generator()
 {
     std::time_t now = std::time(nullptr);
     std::tm local_tm;
@@ -63,7 +63,7 @@ void DateTimeResolver::generater()
 
 std::string VideoInfoFull::getGuid() const
 {
-    auto guid = videoView->Identifier + videoView->AlternateId + videoView->VideoId + downloadConfig->downloadDir +
+    auto guid = videoView->Identifier + videoView->IdType + videoView->ParentId + downloadConfig->downloadDir +
                 std::to_string(static_cast<int>(downloadConfig->videoQuality)) + fileName();
     guid = util::removeSpecialChars(guid);
     return guid;
@@ -78,7 +78,7 @@ std::string VideoInfoFull::parseNameRules(const std::string& ruleName) const
 
     if (dateTimeResolver.date.empty())
     {
-        dateTimeResolver.generater();
+        dateTimeResolver.generator();
     }
 
     auto temp = ruleName;
@@ -101,7 +101,7 @@ std::string VideoInfoFull::parseNameRules(const std::string& ruleName) const
             temp.replace(pos + offset, name.size(), videoView->Publisher);
             offset += videoView->Publisher.size() - name.size();
         }
-        else if (name == showTag(adapter::publishdata))
+        else if (name == showTag(adapter::publishdate))
         {
             temp.replace(pos + offset, name.size(), videoView->PublishDate);
             offset += videoView->PublishDate.size() - name.size();
@@ -133,7 +133,7 @@ std::string VideoInfoFull::fileName(bool update) const
 {
     if (update)
     {
-        dateTimeResolver.generater();
+        dateTimeResolver.generator();
     }
 
     return parseNameRules(downloadConfig->nameRule);
@@ -144,7 +144,7 @@ std::string VideoInfoFull::coverPath() const
     return getGuid();
 }
 
-const std::vector<std::string> VideoInfoFull::ruleList = {adapter::id,   adapter::title, adapter::publisher, adapter::publishdata,
+const std::vector<std::string> VideoInfoFull::ruleList = {adapter::id,   adapter::title, adapter::publisher, adapter::publishdate,
                                                           adapter::date, adapter::time,  adapter::datetime};
 const std::vector<std::string> VideoInfoFull::showRuleList = [](std::vector<std::string> rules) {
     for (auto& rule : rules)

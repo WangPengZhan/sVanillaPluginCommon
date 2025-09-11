@@ -37,7 +37,7 @@ public:
 
     SystemListNotifications listNotificationsAsync();
     SystemListMethods listMethodsAsync();
-    std::list<SystemMulticall> multicallAsync(const std::list<SystemMulticallMathod>& systemMulticallMethods);
+    std::list<SystemMulticall> multicallAsync(const std::list<SystemMulticallMethod>& systemMulticallMethods);
     AriaSaveSession saveSessionAsync();
     AriaShutdown ForceShutdownAsync();
     AriaShutdown ShutdownAsync();

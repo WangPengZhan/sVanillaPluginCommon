@@ -63,13 +63,13 @@ public:
 
     // request for all
     template <typename Response>
-    bool request(const std::string& url, Response& response, HttpMethod medthod = HttpMethod::GET);
+    bool request(const std::string& url, Response& response, HttpMethod method = HttpMethod::GET);
     template <typename Response>
-    bool request(const std::string& url, Response& response, HttpMethod medthod, const CurlHeader& headers, bool headersAdd = false);
+    bool request(const std::string& url, Response& response, HttpMethod method, const CurlHeader& headers, bool headersAdd = false);
     template <typename Response>
-    bool request(const std::string& url, Response& response, HttpMethod medthod, const CurlOptions& options, bool optionsAdd = false);
+    bool request(const std::string& url, Response& response, HttpMethod method, const CurlOptions& options, bool optionsAdd = false);
     template <typename Response>
-    bool request(const std::string& url, Response& response, HttpMethod medthod, const CurlHeader& headers, bool headersAdd, const CurlOptions& options,
+    bool request(const std::string& url, Response& response, HttpMethod method, const CurlHeader& headers, bool headersAdd, const CurlOptions& options,
                  bool optionsAdd = false);
 
     // get

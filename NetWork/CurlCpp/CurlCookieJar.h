@@ -14,7 +14,7 @@ class CurlEasy;
 class CurlCookieJar
 {
 public:
-    using CurlCookieJarValuaType = std::unordered_map<std::string, std::string>;
+    using CurlCookieJarValueType = std::unordered_map<std::string, std::string>;
 
     CurlCookieJar() = default;
     CurlCookieJar(std::string filename);

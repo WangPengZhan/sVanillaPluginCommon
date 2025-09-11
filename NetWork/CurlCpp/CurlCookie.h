@@ -20,7 +20,7 @@ constexpr char delete_content[] = "deleted";
 class CurlCookie
 {
 public:
-    using CookieValuaType = std::unordered_map<std::string, std::string>;
+    using CookieValueType = std::unordered_map<std::string, std::string>;
     enum SameSiteSend
     {
         Invalid,
@@ -67,7 +67,7 @@ public:
 
 protected:
     std::string m_name;
-    CookieValuaType m_cookieValue;
+    CookieValueType m_cookieValue;
     std::string m_empty;
 };
 

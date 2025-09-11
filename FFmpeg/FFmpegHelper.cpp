@@ -69,7 +69,7 @@ std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeInfo& mergeInfo)
 
 std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    return FFmpegHelper::globalInstance().startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    return FFmpegHelper::globalInstance().startFFmpegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 }
 
 void FFmpegHelper::mergeVideoDetach(const MergeInfo& mergeInfo)
@@ -83,7 +83,7 @@ void FFmpegHelper::mergeVideoDetach(const MergeInfo& mergeInfo)
 
 void FFmpegHelper::mergeVideoDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    return FFmpegHelper::globalInstance().startFFpmegDetach(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    return FFmpegHelper::globalInstance().startFFmpegDetach(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 }
 
 FFmpegHelper& FFmpegHelper::globalInstance()
@@ -92,7 +92,7 @@ FFmpegHelper& FFmpegHelper::globalInstance()
     return ffmpegHelper;
 }
 
-std::future<bool> FFmpegHelper::startFFpmegAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+std::future<bool> FFmpegHelper::startFFmpegAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
     return std::async(std::launch::async, [this, mergeInfo, errorFunc = std::move(errorFunc), finishedFunc = std::move(finishedFunc)]() -> bool {
         return startFFmpeg(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
@@ -144,7 +144,7 @@ bool FFmpegHelper::startFFmpeg(const MergeInfo& mergeInfo, std::function<void()>
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
-void FFmpegHelper::startFFpmegDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+void FFmpegHelper::startFFmpegDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
     {
         std::lock_guard lk(m_mutex);
@@ -153,7 +153,7 @@ void FFmpegHelper::startFFpmegDetach(const MergeInfo& mergeInfo, std::function<v
         });
     }
 
-    std::future<bool> result = startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    std::future<bool> result = startFFmpegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 
     {
         std::lock_guard lk(m_mutex);
@@ -178,7 +178,7 @@ std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeTsInfo& mergeInfo)
 
 std::future<bool> FFmpegHelper::mergeVideoAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    return FFmpegHelper::globalInstance().startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    return FFmpegHelper::globalInstance().startFFmpegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 }
 
 void FFmpegHelper::mergeVideoDetach(const MergeTsInfo& mergeInfo)
@@ -188,10 +188,10 @@ void FFmpegHelper::mergeVideoDetach(const MergeTsInfo& mergeInfo)
 
 void FFmpegHelper::mergeVideoDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    return FFmpegHelper::globalInstance().startFFpmegDetach(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    return FFmpegHelper::globalInstance().startFFmpegDetach(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 }
 
-std::future<bool> FFmpegHelper::startFFpmegAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+std::future<bool> FFmpegHelper::startFFmpegAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
     return std::async(std::launch::async, [this, mergeInfo, errorFunc = std::move(errorFunc), finishedFunc = std::move(finishedFunc)]() -> bool {
         return startFFmpeg(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
@@ -210,7 +210,7 @@ bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void(
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
-void FFmpegHelper::startFFpmegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
+void FFmpegHelper::startFFmpegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
     {
         std::lock_guard lk(m_mutex);
@@ -219,7 +219,7 @@ void FFmpegHelper::startFFpmegDetach(const MergeTsInfo& mergeInfo, std::function
         });
     }
 
-    std::future<bool> result = startFFpmegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
+    std::future<bool> result = startFFmpegAsync(mergeInfo, std::move(errorFunc), std::move(finishedFunc));
 
     {
         std::lock_guard lk(m_mutex);

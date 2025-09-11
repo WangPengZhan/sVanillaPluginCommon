@@ -60,7 +60,7 @@ AbstractLogin& LoginProxy::realLogin() const
     return m_realLogin;
 }
 
-int LoginProxy::type() const
+int LoginProxy::pluginId() const
 {
-    return m_realLogin.type();
+    return m_realLogin.pluginId();
 }

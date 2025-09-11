@@ -40,9 +40,9 @@ public:
 
     static FFmpegHelper& globalInstance();
 
-    std::future<bool> startFFpmegAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
+    std::future<bool> startFFmpegAsync(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
     bool startFFmpeg(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
-    void startFFpmegDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
+    void startFFmpegDetach(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
 
     static bool mergeVideo(const MergeTsInfo& mergeInfo);
     static bool mergeVideo(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
@@ -51,9 +51,9 @@ public:
     static void mergeVideoDetach(const MergeTsInfo& mergeInfo);
     static void mergeVideoDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
 
-    std::future<bool> startFFpmegAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
+    std::future<bool> startFFmpegAsync(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
     bool startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
-    void startFFpmegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
+    void startFFmpegDetach(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc);
 
     bool startFFmpeg(const std::vector<std::string>& ffmpegArg, std::function<void()> errorFunc, std::function<void()> finishedFunc,
                      const std::string& ffmpegWorkDir = {});

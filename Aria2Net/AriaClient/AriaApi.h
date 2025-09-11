@@ -563,13 +563,13 @@ using AriaVersion = AriaBasicJson<AriaVersionResult>;
 using SystemListMethods = AriaBasicJson<std::list<std::string>>;
 using SystemListNotifications = AriaBasicJson<std::list<std::string>>;
 using SystemMulticall = AriaBasicJson<std::string>;
-class SystemMulticallMathod
+class SystemMulticallMethod
 {
 public:
     std::string method;
     std::list<std::string> params;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SystemMulticallMathod, method, params)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(SystemMulticallMethod, method, params)
 };
 
 class AriaSendData
