@@ -184,11 +184,11 @@ public:
 };
 
 // Variables that are strictly locked, can't be used without locking
-template <typename T, typename GUARG = std::lock_guard<std::mutex>>
-class mutexed : public detail::basic_mutexed<T, GUARG>
+template <typename T, typename GUARD = std::lock_guard<std::mutex>>
+class mutexed : public detail::basic_mutexed<T, GUARD>
 {
 public:
-    using base_type = detail::basic_mutexed<T, GUARG>;
+    using base_type = detail::basic_mutexed<T, GUARD>;
     using lock_type = typename base_type::lock_type;
     using mutex_type = typename lock_type::mutex_type;
     using base_type::base_type;

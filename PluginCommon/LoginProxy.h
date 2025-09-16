@@ -15,12 +15,14 @@ public:
 
     UserInfo getUserInfo(std::string dir) override;
 
-    bool supportLogin() const override;
-    bool isLogin() const override;
+    bool supportsLogin() const override;
+    bool isLoggedIn() const override;
     std::string cookies() const override;
     bool refreshCookies(std::string cookies) override;
     void setCookies(std::string cookies) override;
     bool logout() override;
+
+    virtual std::string domain() const override;
 
     std::vector<adapter::BaseVideoView> history() override;
 

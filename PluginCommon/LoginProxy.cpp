@@ -20,14 +20,14 @@ UserInfo LoginProxy::getUserInfo(std::string dir)
     return m_realLogin.getUserInfo(dir);
 }
 
-bool LoginProxy::supportLogin() const
+bool LoginProxy::supportsLogin() const
 {
-    return m_realLogin.supportLogin();
+    return m_realLogin.supportsLogin();
 }
 
-bool LoginProxy::isLogin() const
+bool LoginProxy::isLoggedIn() const
 {
-    return m_realLogin.isLogin();
+    return m_realLogin.isLoggedIn();
 }
 
 std::string LoginProxy::cookies() const
@@ -48,6 +48,11 @@ bool LoginProxy::refreshCookies(std::string cookies)
 bool LoginProxy::logout()
 {
     return m_realLogin.logout();
+}
+
+std::string LoginProxy::domain() const
+{
+    return m_realLogin.domain();
 }
 
 std::vector<adapter::BaseVideoView> LoginProxy::history()
