@@ -8,6 +8,12 @@ struct UserInfo
     std::string facePath;
     std::string uname;
     std::string vipType;
+    std::string id;
+    std::string home;
+    std::string sign;
+    std::string option1;
+    std::string option2;
+    std::string option3;
 };
 
 namespace adapter
