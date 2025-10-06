@@ -4,16 +4,47 @@
 #include <filesystem>
 #include <list>
 
-#include <QStandardPaths>
-#include <QApplication>
-#include <QDebug>
-#include <QProcess>
-#include <QString>
+#include "process.hpp"
 
 #include "Util/LocaleHelper.h"
+#include "Util/TimerUtil.h"
 
 #include "FFmpegHelper.h"
 #include "FFmpegLog.h"
+
+#ifdef _WIN32
+#    include <windows.h>
+
+inline std::wstring utf8ToLocaleW(const std::string& str)
+{
+    if (str.empty())
+        return {};
+
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
+
+    std::wstring wstr(size_needed, 0);
+
+    MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), &wstr[0], size_needed);
+
+    return wstr;
+}
+
+inline std::string localeWToUtf8(const std::wstring& wstr)
+{
+    if (wstr.empty())
+        return {};
+
+    int size_needed = WideCharToMultiByte(CP_UTF8,  // 转成 UTF-8
+                                          0, wstr.data(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+
+    std::string str(size_needed, 0);
+
+    WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), &str[0], size_needed, nullptr, nullptr);
+
+    return str;
+}
+
+#endif
 
 namespace ffmpeg
 {
@@ -101,46 +132,57 @@ std::future<bool> FFmpegHelper::startFFmpegAsync(const MergeInfo& mergeInfo, std
 
 bool FFmpegHelper::startFFmpeg(const MergeInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    QStringList ffmpegArg;
-    QStringList mapArgs;
+    std::vector<std::string> ffmpegArgVec;
+    std::vector<std::string> mapArgs;
     int index = 0;
     int videoIndex = 0;
 
     if (!mergeInfo.video.empty())
     {
-        ffmpegArg << "-i" << mergeInfo.video.c_str();
+        ffmpegArgVec.push_back("-i");
+        ffmpegArgVec.push_back(mergeInfo.video);
         videoIndex = index;
-        mapArgs << "-map" << QString::number(index++) + ":v?";
+        mapArgs.push_back("-map");
+        mapArgs.push_back(std::to_string(index++) + ":v?");
     }
 
     if (!mergeInfo.audio.empty())
     {
-        ffmpegArg << "-i" << mergeInfo.audio.c_str();
-        mapArgs << "-map" << QString::number(index++) + ":a?";
+        ffmpegArgVec.push_back("-i");
+        ffmpegArgVec.push_back(mergeInfo.audio);
+        mapArgs.push_back("-map");
+        mapArgs.push_back(std::to_string(index++) + ":a?");
     }
     else
     {
-        mapArgs << "-map" << QString::number(videoIndex) + ":a?";
+        mapArgs.push_back("-map");
+        mapArgs.push_back(std::to_string(videoIndex) + ":a?");
     }
 
     if (!mergeInfo.subtitle.empty())
     {
-        ffmpegArg << "-i" << mergeInfo.subtitle.c_str();
-        mapArgs << "-map" << QString::number(index++) + ":s?";
+        ffmpegArgVec.push_back("-i");
+        ffmpegArgVec.push_back(mergeInfo.subtitle);
+        mapArgs.push_back("-map");
+        mapArgs.push_back(std::to_string(index++) + ":s?");
     }
     else
     {
-        mapArgs << "-map" << QString::number(videoIndex) + ":s?";
+        mapArgs.push_back("-map");
+        mapArgs.push_back(std::to_string(videoIndex) + ":s?");
     }
 
-    ffmpegArg << mapArgs << "-c:v" << "copy" << "-c:a" << "copy" << "-c:s" << "mov_text" << "-y";
-    ffmpegArg << mergeInfo.targetVideo.c_str();
+    ffmpegArgVec.insert(ffmpegArgVec.end(), mapArgs.begin(), mapArgs.end());
 
-    std::vector<std::string> ffmpegArgVec;
-    for (const auto& arg : ffmpegArg)
-    {
-        ffmpegArgVec.push_back(arg.toStdString());
-    }
+    ffmpegArgVec.push_back("-c:v");
+    ffmpegArgVec.push_back("copy");
+    ffmpegArgVec.push_back("-c:a");
+    ffmpegArgVec.push_back("copy");
+    ffmpegArgVec.push_back("-c:s");
+    ffmpegArgVec.push_back("mov_text");
+    ffmpegArgVec.push_back("-y");
+    ffmpegArgVec.push_back(mergeInfo.targetVideo);
+
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
@@ -200,13 +242,8 @@ std::future<bool> FFmpegHelper::startFFmpegAsync(const MergeTsInfo& mergeInfo, s
 
 bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    QStringList ffmpegArg;
-    ffmpegArg << "-f" << "concat" << "-safe" << "0" << "-i" << mergeInfo.concatFile.c_str() << "-c" << "copy" << mergeInfo.targetVideo.c_str() << "-y";
-    std::vector<std::string> ffmpegArgVec;
-    for (const auto& arg : ffmpegArg)
-    {
-        ffmpegArgVec.push_back(arg.toStdString());
-    }
+    std::vector<std::string> ffmpegArgVec = {"-f", "concat", "-safe", "0", "-i", mergeInfo.concatFile.c_str(), "-c", "copy", mergeInfo.targetVideo.c_str(),
+                                             "-y"};
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
@@ -230,65 +267,49 @@ void FFmpegHelper::startFFmpegDetach(const MergeTsInfo& mergeInfo, std::function
 bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std::function<void()> errorFunc, std::function<void()> finishedFunc,
                                const std::string& ffmpegWorkDir)
 {
-    QStringList ffmpegArg;
+    std::string path = getModulePath();
+    path = path + "/ffmpeg/ffmpeg";
+#ifdef _WIN32
+    path += ".exe";
+
+    std::wstring command = L"\"" + utf8ToLocaleW(path) + L"\"";
     for (const auto& arg : ffmpegArgVec)
     {
-        ffmpegArg << arg.c_str();
-    }
-    QString executablePath = QApplication::applicationDirPath() + "/ffmpeg";
-    QString ffmpegExecutable = QStandardPaths::findExecutable("ffmpeg", QStringList() << executablePath);
-    qDebug() << ffmpegArg;
-    FFMPEG_LOG_INFO("starting ffmpeg process, param: {}", ffmpegArg.join(" ").toStdString());
-
-    QProcess ffmpegProcess;
-    ffmpegProcess.setProgram(ffmpegExecutable);
-    ffmpegProcess.setArguments(ffmpegArg);
-    if (!ffmpegWorkDir.empty())
-    {
-        QString workDir = QString::fromStdString(ffmpegWorkDir);
-        if (std::filesystem::exists(workDir.toStdString()))
+        command += L" ";
+        std::wstring argw = utf8ToLocaleW(arg);
+        if (argw.find(L' ') != std::wstring::npos || argw.find(L'\"') != std::wstring::npos)
         {
-            ffmpegProcess.setWorkingDirectory(workDir);
+            command += (L"\"" + argw + L"\"");
         }
         else
         {
-            FFMPEG_LOG_ERROR("ffmpeg working directory does not exist: {}", workDir.toStdString());
-            if (errorFunc)
-            {
-                errorFunc();
-            }
-            return false;
+            command += argw;
         }
     }
-    ffmpegProcess.start();
-    ffmpegProcess.waitForFinished(-1);
 
-    auto data = ffmpegProcess.readAllStandardOutput();
-    if (!data.isEmpty())
-    {
-        FFMPEG_LOG_INFO("ffmpeg process: {}", data.toStdString());
-    }
+    std::wstring workDir = utf8ToLocaleW(ffmpegWorkDir);
+#else
 
-    data = ffmpegProcess.readAllStandardError();
-    if (!data.isEmpty())
+    std::string command = "\"" + path + "\"";
+    for (const auto& arg : ffmpegArgVec)
     {
-        FFMPEG_LOG_ERROR("ffmpeg process: {}", data.toStdString());
-    }
-
-    if (ffmpegProcess.exitStatus() == QProcess::NormalExit && ffmpegProcess.exitCode() == 0)
-    {
-        if (finishedFunc)
+        command += " ";
+        if (arg.find(' ') != std::string::npos || arg.find('\"') != std::string::npos)
         {
-            finishedFunc();
+            command += ("\"" + arg + "\"");
         }
-        FFMPEG_LOG_INFO("starting ffmpeg process end");
-        return true;
+        else
+        {
+            command += arg;
+        }
     }
-    else
+
+    std::string workDir = ffmpegWorkDir;
+#endif
+
+    if (!workDir.empty() && !std::filesystem::exists(workDir))
     {
-        std::string errorString = ffmpegProcess.errorString().toStdString();
-        int exitCode = ffmpegProcess.exitCode();
-        FFMPEG_LOG_ERROR("starting ffmpeg process error, errorCode: {}, msg: {}", exitCode, errorString);
+        FFMPEG_LOG_ERROR("ffmpeg working directory does not exist: {}", ffmpegWorkDir);
         if (errorFunc)
         {
             errorFunc();
@@ -296,7 +317,50 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
         return false;
     }
 
-    return true;
+#ifdef _WIN32
+    FFMPEG_LOG_INFO("starting ffmpeg process, param: {}", localeWToUtf8(command));
+#else
+    FFMPEG_LOG_INFO("starting ffmpeg process, param: {}", command);
+#endif
+
+    std::string stdOutStr;
+    std::string stdErrStr;
+
+    TinyProcessLib::Process ffmpegProcess(
+        command, workDir,
+        [&](const char* bytes, size_t n) {
+            stdOutStr.append(bytes, n);
+        },
+        [&](const char* bytes, size_t n) {
+            stdErrStr.append(bytes, n);
+        });
+
+    int exitCode = ffmpegProcess.get_exit_status();
+
+    if (!stdOutStr.empty())
+    {
+        FFMPEG_LOG_INFO("ffmpeg process: {}", stdOutStr);
+    }
+
+    if (!stdErrStr.empty())
+    {
+        FFMPEG_LOG_ERROR("ffmpeg process: {}", stdErrStr);
+    }
+
+    if (exitCode == 0)
+    {
+        if (finishedFunc)
+            finishedFunc();
+        FFMPEG_LOG_INFO("starting ffmpeg process end");
+        return true;
+    }
+    else
+    {
+        FFMPEG_LOG_ERROR("starting ffmpeg process error, errorCode: {}", exitCode);
+        if (errorFunc)
+            errorFunc();
+        return false;
+    }
 }
 
 void FFmpegHelper::closeFFmpeg()
