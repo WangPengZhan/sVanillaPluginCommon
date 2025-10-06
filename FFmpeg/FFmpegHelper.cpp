@@ -268,7 +268,8 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
                                const std::string& ffmpegWorkDir)
 {
     std::string path = getModulePath();
-    path = path + "/ffmpeg/ffmpeg";
+    std::string ffmpegDir = path + "/ffmpeg";
+    path = ffmpegDir + "/ffmpeg";
 #ifdef _WIN32
     path += ".exe";
 
@@ -305,6 +306,14 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     }
 
     std::string workDir = ffmpegWorkDir;
+
+    const char* oldEnv = getenv("LD_LIBRARY_PATH");
+    std::string newEnv = ffmpegDir;
+    if (oldEnv)
+    {
+        newEnv += ":" + std::string(oldEnv);
+    }
+    setenv("LD_LIBRARY_PATH", newEnv.c_str(), 1);
 #endif
 
     if (!workDir.empty() && !std::filesystem::exists(workDir))
@@ -336,12 +345,10 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
         });
 
     int exitCode = ffmpegProcess.get_exit_status();
-
     if (!stdOutStr.empty())
     {
         FFMPEG_LOG_INFO("ffmpeg process: {}", stdOutStr);
     }
-
     if (!stdErrStr.empty())
     {
         FFMPEG_LOG_ERROR("ffmpeg process: {}", stdErrStr);
@@ -350,7 +357,9 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     if (exitCode == 0)
     {
         if (finishedFunc)
+        {
             finishedFunc();
+        }
         FFMPEG_LOG_INFO("starting ffmpeg process end");
         return true;
     }
@@ -358,7 +367,9 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     {
         FFMPEG_LOG_ERROR("starting ffmpeg process error, errorCode: {}", exitCode);
         if (errorFunc)
+        {
             errorFunc();
+        }
         return false;
     }
 }
