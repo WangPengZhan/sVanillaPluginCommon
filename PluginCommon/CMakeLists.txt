@@ -17,13 +17,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
-        ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog/include
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        spdlog
+    PUBLIC
+        spdlog::spdlog
         nlohmann_json::nlohmann_json
+        Util
+        PluginDownload
 )

@@ -7,6 +7,163 @@
 #include "Util/UrlProccess.h"
 #include <iomanip>
 
+namespace
+{
+constexpr char fileTypeVideo[] = "Video";
+constexpr char fileTypeImage[] = "Image";
+constexpr char fileTypeAudio[] = "Audio";
+constexpr char fileTypePDF[] = "PDF";
+constexpr char fileTypeMarkdown[] = "Markdown";
+constexpr char fileTypeText[] = "Text";
+constexpr char fileTypeFile[] = "File";
+
+constexpr char videoQualityBest[] = "Best";
+constexpr char videoQuality240P[] = "R240P";
+constexpr char videoQuality360P[] = "R360P";
+constexpr char videoQuality480P[] = "R480P";
+constexpr char videoQuality720P[] = "R720P";
+constexpr char videoQuality720P60F[] = "R720P60F";
+constexpr char videoQuality1080P[] = "R1080P";
+constexpr char videoQuality1080PL[] = "R1080PL";
+constexpr char videoQuality1080R60F[] = "R1080R60F";
+constexpr char videoQuality2160P[] = "R2160P";
+}  // namespace
+
+namespace adapter
+{
+std::string fileTypeToString(FileType type)
+{
+    switch (type)
+    {
+    case FileType::Video:
+        return fileTypeVideo;
+    case FileType::Image:
+        return fileTypeImage;
+    case FileType::Audio:
+        return fileTypeAudio;
+    case FileType::PDF:
+        return fileTypePDF;
+    case FileType::Markdown:
+        return fileTypeMarkdown;
+    case FileType::Text:
+        return fileTypeText;
+    case FileType::File:
+        return fileTypeFile;
+    default:
+        break;
+    }
+    return {};
+}
+
+FileType fileTypeType(const std::string& type)
+{
+    if (type == fileTypeVideo)
+    {
+        return FileType::Video;
+    }
+    if (type == fileTypeImage)
+    {
+        return FileType::Image;
+    }
+    if (type == fileTypeAudio)
+    {
+        return FileType::Audio;
+    }
+    if (type == fileTypePDF)
+    {
+        return FileType::PDF;
+    }
+    if (type == fileTypeMarkdown)
+    {
+        return FileType::Markdown;
+    }
+    if (type == fileTypeText)
+    {
+        return FileType::Text;
+    }
+    if (type == fileTypeFile)
+    {
+        return FileType::File;
+    }
+    return FileType::Unknow;
+}
+}  // namespace adapter
+
+std::string videoQualityToString(VideQuality quality)
+{
+    switch (quality)
+    {
+    case VideQuality::Best:
+        return videoQualityBest;
+    case VideQuality::R240P:
+        return videoQuality240P;
+    case VideQuality::R360P:
+        return videoQuality360P;
+    case VideQuality::R480P:
+        return videoQuality480P;
+    case VideQuality::R720P:
+        return videoQuality720P;
+    case VideQuality::R720P60F:
+        return videoQuality720P60F;
+    case VideQuality::R1080P:
+        return videoQuality1080P;
+    case VideQuality::R1080PL:
+        return videoQuality1080PL;
+    case VideQuality::R1080R60F:
+        return videoQuality1080R60F;
+    case VideQuality::R2160P:
+        return videoQuality2160P;
+    default:
+        break;
+    }
+    return {};
+}
+
+VideQuality stringToVideoQuality(const std::string& quality)
+{
+    if (quality == videoQualityBest)
+    {
+        return VideQuality::Best;
+    }
+    if (quality == videoQuality240P)
+    {
+        return VideQuality::R240P;
+    }
+    if (quality == videoQuality360P)
+    {
+        return VideQuality::R360P;
+    }
+    if (quality == videoQuality480P)
+    {
+        return VideQuality::R480P;
+    }
+    if (quality == videoQuality720P)
+    {
+        return VideQuality::R720P;
+    }
+    if (quality == videoQuality720P60F)
+    {
+        return VideQuality::R720P60F;
+    }
+    if (quality == videoQuality1080P)
+    {
+        return VideQuality::R1080P;
+    }
+    if (quality == videoQuality1080PL)
+    {
+        return VideQuality::R1080PL;
+    }
+    if (quality == videoQuality1080R60F)
+    {
+        return VideQuality::R1080R60F;
+    }
+    if (quality == videoQuality2160P)
+    {
+        return VideQuality::R2160P;
+    }
+    return VideQuality::Best;
+}
+
 std::vector<int> findAllSubstrings(std::string_view str, const std::string& target)
 {
     std::vector<int> positions;
@@ -63,6 +220,11 @@ void DateTimeResolver::generator()
 
 std::string VideoInfoFull::getGuid() const
 {
+    if (!downloadConfig || !videoView)
+    {
+        return {};
+    }
+
     auto guid = videoView->Identifier + videoView->IdType + videoView->ParentId + downloadConfig->downloadDir +
                 std::to_string(static_cast<int>(downloadConfig->videoQuality)) + videoView->Option1 + videoView->Option2 + videoView->Option3 + fileName();
     guid = util::removeSpecialChars(guid);

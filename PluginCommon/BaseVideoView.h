@@ -5,6 +5,8 @@
 #include <map>
 #include <unordered_map>
 
+#include <nlohmann/json.hpp>
+
 namespace adapter
 {
 enum FileType
@@ -18,6 +20,19 @@ enum FileType
     Text,
     File,
 };
+
+std::string fileTypeToString(FileType type);
+FileType fileTypeType(const std::string& type);
+
+inline void to_json(nlohmann::json& json, const FileType& type)
+{
+    json = fileTypeToString(type);
+}
+
+inline void from_json(const nlohmann::json& json, FileType& type)
+{
+    type = fileTypeType(json.get<std::string>());
+}
 
 struct BaseVideoView
 {
@@ -38,6 +53,8 @@ struct BaseVideoView
     std::string Option3;
     FileType fileType{FileType::Video};
     int pluginId = {-1};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(BaseVideoView, Identifier, IdType, ParentId, ParentIdType, Title, Publisher, Cover, Duration, Description, PublishDate, PlayListTitle, fileExtension, Option1, Option2, Option3, fileType, pluginId)
 };
 
 using VideoView = std::vector<BaseVideoView>;
@@ -67,11 +84,26 @@ enum class VideQuality
     R2160P,
 };
 
+std::string videoQualityToString(VideQuality quality);
+VideQuality stringToVideoQuality(const std::string& quality);
+
+inline void to_json(nlohmann::json& json, const VideQuality& quality)
+{
+    json = videoQualityToString(quality);
+}
+
+inline void from_json(const nlohmann::json& json, VideQuality& quality)
+{
+    quality = stringToVideoQuality(json.get<std::string>());
+}
+
 struct DownloadConfig
 {
     std::string downloadDir;
     VideQuality videoQuality = VideQuality::Best;
     std::string nameRule = "$title$";
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(DownloadConfig, downloadDir, videoQuality, nameRule)
 };
 
 struct DateTimeResolver
@@ -107,4 +139,6 @@ struct PluginMessage
     std::string version;
     std::string description;
     std::string domain;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(PluginMessage, pluginId, name, version, description, domain)
 };

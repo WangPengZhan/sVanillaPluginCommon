@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 struct UserInfo
 {
     std::string facePath;
@@ -14,6 +16,8 @@ struct UserInfo
     std::string option1;
     std::string option2;
     std::string option3;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(UserInfo, facePath, uname, vipType, id, home, sign, option1, option2, option3)
 };
 
 namespace adapter
