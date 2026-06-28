@@ -106,17 +106,15 @@ bool CurlCookies::contains(const std::string& domain) const
     return m_cookieValue.find(domain) != m_cookieValue.end();
 }
 
-const std::string& CurlCookies::value(const std::string& key) const
+std::string CurlCookies::value(const std::string& key) const
 {
     if (m_cookieValue.find(key) == m_cookieValue.end())
     {
-        return m_empty;
+        return {};
     }
     else
     {
-        static std::string content;
-        content = cookie(key).content();
-        return content;
+        return cookie(key).content();
     }
 }
 

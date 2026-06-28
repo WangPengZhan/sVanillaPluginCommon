@@ -23,7 +23,7 @@ public:
     void setToCurl(CurlEasy& easy) const;
 
 private:
-    std::string m_showContent;
+    mutable std::string m_showContent;
 };
 
 }  // namespace network

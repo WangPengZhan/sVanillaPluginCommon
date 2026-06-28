@@ -5,6 +5,7 @@
 
 #include "CNetWork.h"
 #include "NetworkLog.h"
+#include "Util/UrlProccess.h"
 
 namespace network
 {
@@ -90,15 +91,15 @@ std::string NetWork::paramsString(const ParamType& params)
         if (it != params.begin())
         {
             res += "&";
-            res += it->first;
+            res += util::urlEncode(it->first);
             res += "=";
-            res += it->second;
+            res += util::urlEncode(it->second);
         }
         else
         {
-            res += it->first;
+            res += util::urlEncode(it->first);
             res += "=";
-            res += it->second;
+            res += util::urlEncode(it->second);
         }
     }
     return res;

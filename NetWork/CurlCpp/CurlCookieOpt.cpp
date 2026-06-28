@@ -39,11 +39,10 @@ std::string CurlCookieOpt::shortContent() const
 
 void CurlCookieOpt::setToCurl(CURL* handle) const
 {
-    static std::string strCookies;
-    strCookies = shortContent();
-    if (handle && !strCookies.empty())
+    m_showContent = shortContent();
+    if (handle && !m_showContent.empty())
     {
-        curl_easy_setopt(handle, CURLOPT_COOKIE, strCookies.c_str());
+        curl_easy_setopt(handle, CURLOPT_COOKIE, m_showContent.c_str());
     }
 }
 

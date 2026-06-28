@@ -79,6 +79,7 @@ void CurlHeader::add(const std::string& header)
     auto newHeaders = curl_slist_append(m_headers.get(), header.c_str());
     if (!newHeaders)
     {
+        return;
     }
 
     m_headers.release();

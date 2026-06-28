@@ -42,13 +42,18 @@ private:
 template <typename Iterator>
 void CurlHeader::add(Iterator begin, Iterator end)
 {
-    auto header = m_headers.get();
-    for (; begin < end; ++begin)
+    CurlHeader copy(*this);
+    auto header = copy.m_headers.get();
+    for (; begin != end; ++begin)
     {
-        header = curl_slist_append(header, (*begin).c_str());
+        auto newHeader = curl_slist_append(header, (*begin).c_str());
+        if (!newHeader)
+        {
+            return;
+        }
+        header = newHeader;
     }
-    m_headers.release();
-    m_headers.reset(header);
+    m_headers = std::move(copy.m_headers);
 }
 
 }  // namespace network

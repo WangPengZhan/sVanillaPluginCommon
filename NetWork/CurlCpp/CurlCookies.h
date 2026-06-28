@@ -27,14 +27,13 @@ public:
     CurlCookies& addCurlCookies(const CurlCookies& cookieJar);
 
     bool contains(const std::string& domain) const;
-    const std::string& value(const std::string& key) const;
+    std::string value(const std::string& key) const;
     std::vector<std::string> keys() const;
 
     static CurlCookies parseCookies(const std::string& content);
 
 private:
     CurlCookiesValueType m_cookieValue;
-    std::string m_empty;
 };
 
 }  // namespace network

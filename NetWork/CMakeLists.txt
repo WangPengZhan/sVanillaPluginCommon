@@ -14,12 +14,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        spdlog
+    PUBLIC
+        spdlog::spdlog
         CURL::libcurl
+    PRIVATE
+        Util
 )

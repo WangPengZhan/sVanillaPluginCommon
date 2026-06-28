@@ -78,6 +78,7 @@ using AcceptEncoding = CurlOption<const char*, CURLOPT_ACCEPT_ENCODING>;
 using SSLVerifyPeer = CurlOption<bool, CURLOPT_SSL_VERIFYPEER>;
 using SSLVerifyHost = CurlOption<bool, CURLOPT_SSL_VERIFYHOST>;
 using PostFields = CurlOption<std::string, CURLOPT_POSTFIELDS>;
+using CopyPostFields = CurlOption<std::string, CURLOPT_COPYPOSTFIELDS>;
 using CookieFields = CurlOption<CurlCookieOpt, CURLOPT_COOKIE>;
 using FollowLocation = CurlOption<long, CURLOPT_FOLLOWLOCATION>;
 
