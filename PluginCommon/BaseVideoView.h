@@ -54,7 +54,8 @@ struct BaseVideoView
     FileType fileType{FileType::Video};
     int pluginId = {-1};
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(BaseVideoView, Identifier, IdType, ParentId, ParentIdType, Title, Publisher, Cover, Duration, Description, PublishDate, PlayListTitle, fileExtension, Option1, Option2, Option3, fileType, pluginId)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(BaseVideoView, Identifier, IdType, ParentId, ParentIdType, Title, Publisher, Cover, Duration, Description,
+                                                PublishDate, PlayListTitle, fileExtension, Option1, Option2, Option3, fileType, pluginId)
 };
 
 using VideoView = std::vector<BaseVideoView>;

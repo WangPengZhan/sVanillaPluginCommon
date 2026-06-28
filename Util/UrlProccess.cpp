@@ -91,12 +91,12 @@ std::string removeSpecialChars(const std::string& input)
         else if (length == 3)
         {
             cp = static_cast<char32_t>((lead & 0x0F) << 12 | (static_cast<unsigned char>(sv[i + 1]) & 0x3F) << 6 |
-                                      (static_cast<unsigned char>(sv[i + 2]) & 0x3F));
+                                       (static_cast<unsigned char>(sv[i + 2]) & 0x3F));
         }
         else if (length == 4)
         {
             cp = static_cast<char32_t>((lead & 0x07) << 18 | (static_cast<unsigned char>(sv[i + 1]) & 0x3F) << 12 |
-                                      (static_cast<unsigned char>(sv[i + 2]) & 0x3F) << 6 | (static_cast<unsigned char>(sv[i + 3]) & 0x3F));
+                                       (static_cast<unsigned char>(sv[i + 2]) & 0x3F) << 6 | (static_cast<unsigned char>(sv[i + 3]) & 0x3F));
         }
 
         if (specialSet.find(cp) == specialSet.end())
