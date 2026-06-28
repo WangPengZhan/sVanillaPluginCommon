@@ -6,6 +6,12 @@
 
 namespace encoding
 {
+std::string base64Encode(const std::string& input);
+std::string base64Decode(const std::string& input);
+
+std::string hexEncode(const std::string& input);
+std::string hexDecode(const std::string& input);
+
 std::string urlEncode(const std::string& decoded);
 std::string urlDecode(const std::string& encoded);
 

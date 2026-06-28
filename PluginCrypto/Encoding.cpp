@@ -3,6 +3,11 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <vector>
+
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+#include <openssl/evp.h>
 
 namespace encoding
 {
@@ -30,6 +35,65 @@ int hexValue(char c)
     return -1;
 }
 }  // namespace
+
+std::string base64Encode(const std::string& input)
+{
+    BIO* b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO* bio = BIO_new(BIO_s_mem());
+    bio = BIO_push(b64, bio);
+
+    BIO_write(bio, input.data(), static_cast<int>(input.length()));
+    BIO_flush(bio);
+
+    BUF_MEM* bufferPtr = nullptr;
+    BIO_get_mem_ptr(bio, &bufferPtr);
+    std::string result(bufferPtr->data, bufferPtr->length);
+
+    BIO_free_all(bio);
+
+    return result;
+}
+
+std::string base64Decode(const std::string& input)
+{
+    std::vector<char> buffer(input.size());
+
+    BIO* b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO* bio = BIO_new_mem_buf(input.c_str(), static_cast<int>(input.length()));
+    bio = BIO_push(b64, bio);
+
+    const int length = BIO_read(bio, buffer.data(), static_cast<int>(buffer.size()));
+    std::string result(buffer.data(), length);
+
+    BIO_free_all(bio);
+
+    return result;
+}
+
+std::string hexEncode(const std::string& input)
+{
+    std::stringstream ss;
+    ss << std::hex << std::uppercase;
+    for (const unsigned char c : input)
+    {
+        ss << std::setw(2) << std::setfill('0') << static_cast<int>(c);
+    }
+    return ss.str();
+}
+
+std::string hexDecode(const std::string& input)
+{
+    std::string result;
+    for (size_t i = 0; i < input.length(); i += 2)
+    {
+        const std::string byteString = input.substr(i, 2);
+        const char byte = static_cast<char>(std::stoi(byteString, nullptr, 16));
+        result.push_back(byte);
+    }
+    return result;
+}
 
 std::string urlEncode(const std::string& decoded)
 {

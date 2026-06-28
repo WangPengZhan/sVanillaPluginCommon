@@ -18,6 +18,5 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         nlohmann_json::nlohmann_json
     PRIVATE
-        ${QT_LIBS}
         PluginCrypto
 )

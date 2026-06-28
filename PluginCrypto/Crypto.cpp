@@ -1,5 +1,7 @@
 #include "Crypto.h"
 
+#include "Encoding.h"
+
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -7,73 +9,12 @@
 #include <vector>
 
 #include <openssl/aes.h>
-#include <openssl/bio.h>
-#include <openssl/buffer.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
 namespace crypto
 {
-std::string base64Encode(const std::string& input)
-{
-    BIO* b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    BIO* bio = BIO_new(BIO_s_mem());
-    bio = BIO_push(b64, bio);
-
-    BIO_write(bio, input.data(), static_cast<int>(input.length()));
-    BIO_flush(bio);
-
-    BUF_MEM* bufferPtr = nullptr;
-    BIO_get_mem_ptr(bio, &bufferPtr);
-    std::string result(bufferPtr->data, bufferPtr->length);
-
-    BIO_free_all(bio);
-
-    return result;
-}
-
-std::string base64Decode(const std::string& input)
-{
-    std::vector<char> buffer(input.size());
-
-    BIO* b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    BIO* bio = BIO_new_mem_buf(input.c_str(), static_cast<int>(input.length()));
-    bio = BIO_push(b64, bio);
-
-    const int length = BIO_read(bio, buffer.data(), static_cast<int>(buffer.size()));
-    std::string result(buffer.data(), length);
-
-    BIO_free_all(bio);
-
-    return result;
-}
-
-std::string hexEncode(const std::string& input)
-{
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-    for (const unsigned char c : input)
-    {
-        ss << std::setw(2) << std::setfill('0') << static_cast<int>(c);
-    }
-    return ss.str();
-}
-
-std::string hexDecode(const std::string& input)
-{
-    std::string result;
-    for (size_t i = 0; i < input.length(); i += 2)
-    {
-        const std::string byteString = input.substr(i, 2);
-        const char byte = static_cast<char>(std::stoi(byteString, nullptr, 16));
-        result.push_back(byte);
-    }
-    return result;
-}
-
 std::string aes128Encrypt(const std::string& text, const std::string& mode, const std::string& key, const std::string& iv, const std::string& format)
 {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
@@ -110,12 +51,12 @@ std::string aes128Encrypt(const std::string& text, const std::string& mode, cons
     const std::string result(reinterpret_cast<char*>(ciphertext.data()), cLen + fLen);
     EVP_CIPHER_CTX_free(ctx);
 
-    return format == "base64" ? base64Encode(result) : hexEncode(result);
+    return format == "base64" ? encoding::base64Encode(result) : encoding::hexEncode(result);
 }
 
 std::string aes128EcbDecrypt(const std::string& ciphertext, const std::string& key, const std::string& iv, const std::string& format)
 {
-    const std::string decoded = format == "base64" ? base64Decode(ciphertext) : hexDecode(ciphertext);
+    const std::string decoded = format == "base64" ? encoding::base64Decode(ciphertext) : encoding::hexDecode(ciphertext);
 
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     const EVP_CIPHER* cipher = EVP_aes_128_ecb();
@@ -209,7 +150,7 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
         return {};
     }
 
-    std::string encryptedStr = hexEncode(std::string(reinterpret_cast<char*>(encrypted.data()), outLen));
+    std::string encryptedStr = encoding::hexEncode(std::string(reinterpret_cast<char*>(encrypted.data()), outLen));
     std::transform(encryptedStr.begin(), encryptedStr.end(), encryptedStr.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
     });
