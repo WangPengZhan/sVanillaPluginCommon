@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        CACHE STRING "")
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "")
+endif()
 set(VCPKG_APPLOCAL_DEPS ON)
 
 project(PluginCommon 
@@ -40,14 +42,15 @@ set(CMAKE_CXX_STANDARD 20)
 cmake_policy(SET CMP0087 NEW)
 cmake_policy(SET CMP0079 NEW)
 
-add_subdirectory(PluginCommon)
-add_subdirectory(Aria2Net)
-add_subdirectory(NetWork)
-add_subdirectory(Download)
-add_subdirectory(Util)
-add_subdirectory(FFmpeg)
-
 if (NOT TARGET spdlog)
     set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as a shared library")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/spdlog)
 endif()
+
+add_subdirectory(PluginCrypto)
+add_subdirectory(Util)
+add_subdirectory(NetWork)
+add_subdirectory(Aria2Net)
+add_subdirectory(Download)
+add_subdirectory(PluginCommon)
+add_subdirectory(FFmpeg)

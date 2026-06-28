@@ -88,7 +88,7 @@ def format_dir(dir):
                 format_code(file_path)
  
 def main():
-    src_dir = ['Aria2Net', 'Download', 'FFmpeg', 'NetWork', 'PluginCommon', 'Util']
+    src_dir = ['Aria2Net', 'Download', 'FFmpeg', 'NetWork', 'PluginCommon', 'PluginCrypto', 'Util']
     for dir in src_dir:
         format_dir(dir)
  
