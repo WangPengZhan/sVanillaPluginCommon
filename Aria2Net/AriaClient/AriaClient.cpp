@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "AriaClient.h"
+#include "NetWork/NetworkLog.h"
 
 namespace aria2net
 {
@@ -51,12 +52,12 @@ SystemListNotifications AriaClient::listNotificationsAsync()
 
 SystemListMethods AriaClient::listMethodsAsync()
 {
-    return Call<SystemListNotifications>("system.listMethods", {});
+    return Call<SystemListMethods>("system.listMethods", {});
 }
 
 std::list<SystemMulticall> AriaClient::multicallAsync(const std::list<SystemMulticallMethod>& systemMulticallMethods)
 {
-    auto jsonResult = Call<nlohmann::json>("system.listMethods", {systemMulticallMethods});
+    auto jsonResult = Call<nlohmann::json>("system.multicall", {systemMulticallMethods});
     std::list<SystemMulticall> result;
     for (const auto& singleJson : jsonResult)
     {
@@ -107,12 +108,12 @@ AriaGetGlobalStat AriaClient::GetGlobalStatAsync()
 
 AriaChangeOption AriaClient::ChangeGlobalOptionAsync(const ListString& option)
 {
-    return Call<AriaChangeOption>("aria2.getGlobalStat", {option});
+    return Call<AriaChangeOption>("aria2.changeGlobalOption", {option});
 }
 
 AriaGetOption AriaClient::GetGlobalOptionAsync()
 {
-    return Call<AriaGetOption>("aria2.getGlobalStat", {});
+    return Call<AriaGetOption>("aria2.getGlobalOption", {});
 }
 
 AriaGetOption AriaClient::GetOptionAsync(const std::string& gid)
@@ -122,7 +123,7 @@ AriaGetOption AriaClient::GetOptionAsync(const std::string& gid)
 
 AriaChangeUri AriaClient::ChangeUriAsync(const std::string& gid, int fileIndex, ListString delUris, ListString addUris, int position)
 {
-    return Call<AriaChangeUri>("aria2.changePosition", {gid, fileIndex, delUris, addUris, position});
+    return Call<AriaChangeUri>("aria2.changeUri", {gid, fileIndex, delUris, addUris, position});
 }
 
 AriaChangePosition AriaClient::ChangePositionAsync(const std::string& gid, int pos, HowChangePosition how)
@@ -164,13 +165,20 @@ AriaPause AriaClient::UnpauseAsync(const std::string& gid)
 
 AriaChangeOption AriaClient::ChangeOptionAsync(const std::string& gid, const ListString& option)
 {
-    return Call<AriaChangeOption>("aria2.getGlobalStat", {gid});
+    return Call<AriaChangeOption>("aria2.changeOption", {gid, option});
 }
 
 std::string AriaClient::Request(const std::string& url, const std::string& param)
 {
     std::string strResponse;
-    post(url, strResponse, param);
+    try
+    {
+        post(url, strResponse, param);
+    }
+    catch (const std::exception& e)
+    {
+        NETWORK_LOG_ERROR("AriaClient request error: {}, url: {}", e.what(), url);
+    }
     return strResponse;
 }
 

@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "NetWork/CNetWork.h"
+#include "NetWork/NetworkLog.h"
 #include "Aria2Net/AriaClient/AriaApi.h"
 
 namespace aria2net
@@ -82,8 +83,16 @@ Result AriaClient::Call(std::string methodName, nlohmann::json::array_t params)
     {
         return Result();
     }
-    nlohmann::json result = nlohmann::json::parse(res);
-    return Result(result);
+    try
+    {
+        nlohmann::json result = nlohmann::json::parse(res);
+        return Result(result);
+    }
+    catch (const std::exception& e)
+    {
+        NETWORK_LOG_ERROR("AriaClient parse result error: {}, response: {}", e.what(), res);
+        return Result();
+    }
 }
 
 template <typename Result>
@@ -91,8 +100,16 @@ inline Result AriaClient::GetResult(const AriaSendData& sendData)
 {
     std::string strParams = sendData.toString();
     std::string strResponse = Request(GetRpcUri(), strParams);
-    nlohmann::json result = nlohmann::json::parse(strResponse);
-    return Result(result);
+    try
+    {
+        nlohmann::json result = nlohmann::json::parse(strResponse);
+        return Result(result);
+    }
+    catch (const std::exception& e)
+    {
+        NETWORK_LOG_ERROR("AriaClient parse result error: {}, response: {}", e.what(), strResponse);
+        return Result();
+    }
 }
 
 }  // namespace aria2net
