@@ -61,4 +61,7 @@ protected:
     DownloadInfo m_info;
 };
 
+std::string statusToString(AbstractDownloader::Status status);
+AbstractDownloader::Status statusFromString(const std::string& status);
+
 }  // namespace download
