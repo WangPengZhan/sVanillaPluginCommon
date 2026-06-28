@@ -4,6 +4,7 @@ namespace util
 {
 static constexpr char32_t specialChars[] = {U'?', U'/', U'"', U'\\', U'<', U'>', U'*', U'|', U':', 0x2022};
 std::string u8ToString(const std::u8string& u8Str);
+std::string urlEncode(const std::string& raw);
 std::string urlDecode(const std::string& encoded);
 std::string removeSpecialChars(const std::string& str);
 }  // namespace util

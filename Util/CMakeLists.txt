@@ -15,7 +15,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        nlohmann_json::nlohmann_json
     PRIVATE
         ${QT_LIBS}
-        nlohmann_json::nlohmann_json
+        PluginCrypto
 )
