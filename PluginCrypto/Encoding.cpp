@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <vector>
 
@@ -13,6 +14,16 @@ namespace encoding
 {
 namespace
 {
+struct BioDeleter
+{
+    void operator()(BIO* bio) const
+    {
+        BIO_free_all(bio);
+    }
+};
+
+using BioPtr = std::unique_ptr<BIO, BioDeleter>;
+
 bool isUnreserved(unsigned char c)
 {
     return std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~';
@@ -39,20 +50,43 @@ int hexValue(char c)
 std::string base64Encode(const std::string& input)
 {
     BIO* b64 = BIO_new(BIO_f_base64());
-    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    BIO* bio = BIO_new(BIO_s_mem());
-    bio = BIO_push(b64, bio);
+    if (!b64)
+    {
+        return {};
+    }
 
-    BIO_write(bio, input.data(), static_cast<int>(input.length()));
-    BIO_flush(bio);
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO* mem = BIO_new(BIO_s_mem());
+    if (!mem)
+    {
+        BIO_free_all(b64);
+        return {};
+    }
+
+    BioPtr bio(BIO_push(b64, mem));
+    if (!bio)
+    {
+        BIO_free_all(b64);
+        BIO_free_all(mem);
+        return {};
+    }
+
+    if (BIO_write(bio.get(), input.data(), static_cast<int>(input.length())) < 0)
+    {
+        return {};
+    }
+    if (BIO_flush(bio.get()) != 1)
+    {
+        return {};
+    }
 
     BUF_MEM* bufferPtr = nullptr;
-    BIO_get_mem_ptr(bio, &bufferPtr);
-    std::string result(bufferPtr->data, bufferPtr->length);
+    if (BIO_get_mem_ptr(bio.get(), &bufferPtr) != 1 || !bufferPtr)
+    {
+        return {};
+    }
 
-    BIO_free_all(bio);
-
-    return result;
+    return std::string(bufferPtr->data, bufferPtr->length);
 }
 
 std::string base64Decode(const std::string& input)
@@ -60,16 +94,34 @@ std::string base64Decode(const std::string& input)
     std::vector<char> buffer(input.size());
 
     BIO* b64 = BIO_new(BIO_f_base64());
+    if (!b64)
+    {
+        return {};
+    }
+
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    BIO* bio = BIO_new_mem_buf(input.c_str(), static_cast<int>(input.length()));
-    bio = BIO_push(b64, bio);
+    BIO* mem = BIO_new_mem_buf(input.data(), static_cast<int>(input.length()));
+    if (!mem)
+    {
+        BIO_free_all(b64);
+        return {};
+    }
 
-    const int length = BIO_read(bio, buffer.data(), static_cast<int>(buffer.size()));
-    std::string result(buffer.data(), length);
+    BioPtr bio(BIO_push(b64, mem));
+    if (!bio)
+    {
+        BIO_free_all(b64);
+        BIO_free_all(mem);
+        return {};
+    }
 
-    BIO_free_all(bio);
+    const int length = BIO_read(bio.get(), buffer.data(), static_cast<int>(buffer.size()));
+    if (length < 0)
+    {
+        return {};
+    }
 
-    return result;
+    return std::string(buffer.data(), static_cast<size_t>(length));
 }
 
 std::string hexEncode(const std::string& input)

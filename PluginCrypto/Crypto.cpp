@@ -5,23 +5,89 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <vector>
 
-#include <openssl/aes.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 
 namespace crypto
 {
+namespace
+{
+struct CipherCtxDeleter
+{
+    void operator()(EVP_CIPHER_CTX* ctx) const
+    {
+        EVP_CIPHER_CTX_free(ctx);
+    }
+};
+
+struct MdCtxDeleter
+{
+    void operator()(EVP_MD_CTX* ctx) const
+    {
+        EVP_MD_CTX_free(ctx);
+    }
+};
+
+struct PkeyCtxDeleter
+{
+    void operator()(EVP_PKEY_CTX* ctx) const
+    {
+        EVP_PKEY_CTX_free(ctx);
+    }
+};
+
+struct PkeyDeleter
+{
+    void operator()(EVP_PKEY* pkey) const
+    {
+        EVP_PKEY_free(pkey);
+    }
+};
+
+struct BioDeleter
+{
+    void operator()(BIO* bio) const
+    {
+        BIO_free(bio);
+    }
+};
+
+using CipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, CipherCtxDeleter>;
+using MdCtxPtr = std::unique_ptr<EVP_MD_CTX, MdCtxDeleter>;
+using PkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, PkeyCtxDeleter>;
+using PkeyPtr = std::unique_ptr<EVP_PKEY, PkeyDeleter>;
+using BioPtr = std::unique_ptr<BIO, BioDeleter>;
+
+constexpr size_t aes128KeySize = 16;
+constexpr size_t aesBlockSize = 16;
+}  // namespace
+
 std::string aes128Encrypt(const std::string& text, const std::string& mode, const std::string& key, const std::string& iv, const std::string& format)
 {
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (key.size() != aes128KeySize)
+    {
+        return {};
+    }
+
+    CipherCtxPtr ctx(EVP_CIPHER_CTX_new());
+    if (!ctx)
+    {
+        return {};
+    }
+
     const EVP_CIPHER* cipher = nullptr;
 
     if (mode == "cbc")
     {
+        if (iv.size() != aesBlockSize)
+        {
+            return {};
+        }
         cipher = EVP_aes_128_cbc();
     }
     else if (mode == "ecb")
@@ -30,97 +96,118 @@ std::string aes128Encrypt(const std::string& text, const std::string& mode, cons
     }
     else
     {
-        EVP_CIPHER_CTX_free(ctx);
         return {};
     }
 
     const auto* keyData = reinterpret_cast<const unsigned char*>(key.c_str());
     const auto* ivData = reinterpret_cast<const unsigned char*>(iv.c_str());
 
-    EVP_EncryptInit_ex(ctx, cipher, nullptr, keyData, iv.empty() ? nullptr : ivData);
-    EVP_CIPHER_CTX_set_padding(ctx, 1);
+    if (EVP_EncryptInit_ex2(ctx.get(), cipher, keyData, mode == "cbc" ? ivData : nullptr, nullptr) != 1)
+    {
+        return {};
+    }
+    if (EVP_CIPHER_CTX_set_padding(ctx.get(), 1) != 1)
+    {
+        return {};
+    }
 
-    const int maxLen = static_cast<int>(text.length()) + EVP_CIPHER_block_size(cipher);
+    const int maxLen = static_cast<int>(text.length()) + EVP_CIPHER_get_block_size(cipher);
     int cLen = 0;
     int fLen = 0;
     std::vector<unsigned char> ciphertext(maxLen);
 
-    EVP_EncryptUpdate(ctx, ciphertext.data(), &cLen, reinterpret_cast<const unsigned char*>(text.c_str()), static_cast<int>(text.length()));
-    EVP_EncryptFinal_ex(ctx, ciphertext.data() + cLen, &fLen);
+    if (EVP_EncryptUpdate(ctx.get(), ciphertext.data(), &cLen, reinterpret_cast<const unsigned char*>(text.c_str()), static_cast<int>(text.length())) != 1)
+    {
+        return {};
+    }
+    if (EVP_EncryptFinal_ex(ctx.get(), ciphertext.data() + cLen, &fLen) != 1)
+    {
+        return {};
+    }
 
     const std::string result(reinterpret_cast<char*>(ciphertext.data()), cLen + fLen);
-    EVP_CIPHER_CTX_free(ctx);
 
     return format == "base64" ? encoding::base64Encode(result) : encoding::hexEncode(result);
 }
 
 std::string aes128EcbDecrypt(const std::string& ciphertext, const std::string& key, const std::string& iv, const std::string& format)
 {
+    if (key.size() != aes128KeySize)
+    {
+        return {};
+    }
+
     const std::string decoded = format == "base64" ? encoding::base64Decode(ciphertext) : encoding::hexDecode(ciphertext);
 
-    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    CipherCtxPtr ctx(EVP_CIPHER_CTX_new());
+    if (!ctx)
+    {
+        return {};
+    }
+
     const EVP_CIPHER* cipher = EVP_aes_128_ecb();
 
-    auto* keyData = reinterpret_cast<unsigned char*>(const_cast<char*>(key.c_str()));
-    auto* ivData = reinterpret_cast<unsigned char*>(const_cast<char*>(iv.c_str()));
+    const auto* keyData = reinterpret_cast<const unsigned char*>(key.c_str());
 
-    EVP_DecryptInit_ex(ctx, cipher, nullptr, keyData, iv.empty() ? nullptr : ivData);
+    if (EVP_DecryptInit_ex2(ctx.get(), cipher, keyData, nullptr, nullptr) != 1)
+    {
+        return {};
+    }
 
-    int pLen = static_cast<int>(decoded.length());
+    const int maxLen = static_cast<int>(decoded.length()) + EVP_CIPHER_get_block_size(cipher);
+    int pLen = 0;
     int fLen = 0;
-    std::vector<unsigned char> plaintext(pLen + AES_BLOCK_SIZE);
+    std::vector<unsigned char> plaintext(maxLen);
 
-    EVP_DecryptUpdate(ctx, plaintext.data(), &pLen, reinterpret_cast<const unsigned char*>(decoded.c_str()), static_cast<int>(decoded.length()));
-    EVP_DecryptFinal_ex(ctx, plaintext.data() + pLen, &fLen);
+    if (EVP_DecryptUpdate(ctx.get(), plaintext.data(), &pLen, reinterpret_cast<const unsigned char*>(decoded.c_str()), static_cast<int>(decoded.length())) != 1)
+    {
+        return {};
+    }
+    if (EVP_DecryptFinal_ex(ctx.get(), plaintext.data() + pLen, &fLen) != 1)
+    {
+        return {};
+    }
 
     std::string result(reinterpret_cast<char*>(plaintext.data()), pLen + fLen);
-    EVP_CIPHER_CTX_free(ctx);
 
     return result;
 }
 
 std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std::string& publicKey)
 {
-    BIO* bio = BIO_new_mem_buf(publicKey.c_str(), -1);
+    BioPtr bio(BIO_new_mem_buf(publicKey.c_str(), -1));
     if (!bio)
     {
         return {};
     }
 
-    EVP_PKEY* pkey = PEM_read_bio_PUBKEY(bio, nullptr, nullptr, nullptr);
+    PkeyPtr pkey(PEM_read_bio_PUBKEY(bio.get(), nullptr, nullptr, nullptr));
     if (!pkey)
     {
-        BIO_free(bio);
         return {};
     }
 
-    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, nullptr);
+    PkeyCtxPtr ctx(EVP_PKEY_CTX_new(pkey.get(), nullptr));
     if (!ctx)
     {
-        EVP_PKEY_free(pkey);
-        BIO_free(bio);
         return {};
     }
 
-    if (EVP_PKEY_encrypt_init(ctx) <= 0)
+    if (EVP_PKEY_encrypt_init(ctx.get()) <= 0)
     {
-        EVP_PKEY_CTX_free(ctx);
-        EVP_PKEY_free(pkey);
-        BIO_free(bio);
         return {};
     }
 
-    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_NO_PADDING) <= 0)
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx.get(), RSA_NO_PADDING) <= 0)
     {
-        EVP_PKEY_CTX_free(ctx);
-        EVP_PKEY_free(pkey);
-        BIO_free(bio);
         return {};
     }
 
-    RSA* rsa = EVP_PKEY_get1_RSA(pkey);
-    const int keyLen = RSA_size(rsa);
-    RSA_free(rsa);
+    const int keyLen = EVP_PKEY_get_size(pkey.get());
+    if (keyLen <= 0)
+    {
+        return {};
+    }
 
     std::string padded = text;
     if (padded.size() < static_cast<size_t>(keyLen))
@@ -133,20 +220,14 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
     }
 
     size_t outLen = 0;
-    if (EVP_PKEY_encrypt(ctx, nullptr, &outLen, reinterpret_cast<const unsigned char*>(padded.c_str()), padded.length()) <= 0)
+    if (EVP_PKEY_encrypt(ctx.get(), nullptr, &outLen, reinterpret_cast<const unsigned char*>(padded.data()), padded.length()) <= 0)
     {
-        EVP_PKEY_CTX_free(ctx);
-        EVP_PKEY_free(pkey);
-        BIO_free(bio);
         return {};
     }
 
     std::vector<unsigned char> encrypted(outLen);
-    if (EVP_PKEY_encrypt(ctx, encrypted.data(), &outLen, reinterpret_cast<const unsigned char*>(padded.c_str()), padded.length()) <= 0)
+    if (EVP_PKEY_encrypt(ctx.get(), encrypted.data(), &outLen, reinterpret_cast<const unsigned char*>(padded.data()), padded.length()) <= 0)
     {
-        EVP_PKEY_CTX_free(ctx);
-        EVP_PKEY_free(pkey);
-        BIO_free(bio);
         return {};
     }
 
@@ -155,42 +236,33 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
         return static_cast<char>(std::tolower(c));
     });
 
-    EVP_PKEY_CTX_free(ctx);
-    EVP_PKEY_free(pkey);
-    BIO_free(bio);
-
     return encryptedStr;
 }
 
 std::string md5Raw(const std::string& input)
 {
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    MdCtxPtr ctx(EVP_MD_CTX_new());
     if (!ctx)
     {
         return {};
     }
 
-    if (EVP_DigestInit_ex(ctx, EVP_md5(), nullptr) != 1)
+    if (EVP_DigestInit_ex(ctx.get(), EVP_md5(), nullptr) != 1)
     {
-        EVP_MD_CTX_free(ctx);
         return {};
     }
 
-    if (EVP_DigestUpdate(ctx, input.c_str(), input.length()) != 1)
+    if (EVP_DigestUpdate(ctx.get(), input.c_str(), input.length()) != 1)
     {
-        EVP_MD_CTX_free(ctx);
         return {};
     }
 
     unsigned char digest[EVP_MAX_MD_SIZE];
     unsigned int digestLen = 0;
-    if (EVP_DigestFinal_ex(ctx, digest, &digestLen) != 1)
+    if (EVP_DigestFinal_ex(ctx.get(), digest, &digestLen) != 1)
     {
-        EVP_MD_CTX_free(ctx);
         return {};
     }
-
-    EVP_MD_CTX_free(ctx);
 
     return std::string(reinterpret_cast<char*>(digest), digestLen);
 }

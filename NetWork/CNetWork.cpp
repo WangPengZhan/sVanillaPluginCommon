@@ -91,15 +91,15 @@ std::string NetWork::paramsString(const ParamType& params)
         if (it != params.begin())
         {
             res += "&";
-            res += util::urlEncode(it->first);
+            res += it->first;
             res += "=";
-            res += util::urlEncode(it->second);
+            res += it->second;
         }
         else
         {
-            res += util::urlEncode(it->first);
+            res += it->first;
             res += "=";
-            res += util::urlEncode(it->second);
+            res += it->second;
         }
     }
     return res;
