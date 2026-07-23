@@ -3,6 +3,7 @@
 #include "Encoding.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <iomanip>
 #include <memory>
@@ -65,6 +66,29 @@ using BioPtr = std::unique_ptr<BIO, BioDeleter>;
 
 constexpr size_t aes128KeySize = 16;
 constexpr size_t aesBlockSize = 16;
+
+std::string digestRaw(const std::string& input, const EVP_MD* digestType)
+{
+    if (!digestType)
+    {
+        return {};
+    }
+
+    MdCtxPtr ctx(EVP_MD_CTX_new());
+    if (!ctx || EVP_DigestInit_ex(ctx.get(), digestType, nullptr) != 1 || EVP_DigestUpdate(ctx.get(), input.data(), input.size()) != 1)
+    {
+        return {};
+    }
+
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int digestLen = 0;
+    if (EVP_DigestFinal_ex(ctx.get(), digest, &digestLen) != 1)
+    {
+        return {};
+    }
+
+    return std::string(reinterpret_cast<char*>(digest), digestLen);
+}
 }  // namespace
 
 std::string aes128Encrypt(const std::string& text, const std::string& mode, const std::string& key, const std::string& iv, const std::string& format)
@@ -241,30 +265,7 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
 
 std::string md5Raw(const std::string& input)
 {
-    MdCtxPtr ctx(EVP_MD_CTX_new());
-    if (!ctx)
-    {
-        return {};
-    }
-
-    if (EVP_DigestInit_ex(ctx.get(), EVP_md5(), nullptr) != 1)
-    {
-        return {};
-    }
-
-    if (EVP_DigestUpdate(ctx.get(), input.c_str(), input.length()) != 1)
-    {
-        return {};
-    }
-
-    unsigned char digest[EVP_MAX_MD_SIZE];
-    unsigned int digestLen = 0;
-    if (EVP_DigestFinal_ex(ctx.get(), digest, &digestLen) != 1)
-    {
-        return {};
-    }
-
-    return std::string(reinterpret_cast<char*>(digest), digestLen);
+    return digestRaw(input, EVP_md5());
 }
 
 std::string md5Hex(const std::string& input)
@@ -276,5 +277,45 @@ std::string md5Hex(const std::string& input)
         ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(c);
     }
     return ss.str();
+}
+
+std::string sm3Raw(const std::string& input)
+{
+    return digestRaw(input, EVP_sm3());
+}
+
+std::string rc4(const std::string& input, const std::string& key)
+{
+    if (key.empty())
+    {
+        return {};
+    }
+
+    std::array<unsigned char, 256> state{};
+    for (size_t index = 0; index < state.size(); ++index)
+    {
+        state[index] = static_cast<unsigned char>(index);
+    }
+
+    size_t j = 0;
+    for (size_t index = 0; index < state.size(); ++index)
+    {
+        j = (j + state[index] + static_cast<unsigned char>(key[index % key.size()])) % state.size();
+        std::swap(state[index], state[j]);
+    }
+
+    std::string output;
+    output.reserve(input.size());
+    size_t i = 0;
+    j = 0;
+    for (const unsigned char byte : input)
+    {
+        i = (i + 1) % state.size();
+        j = (j + state[i]) % state.size();
+        std::swap(state[i], state[j]);
+        const unsigned char keyByte = state[(state[i] + state[j]) % state.size()];
+        output.push_back(static_cast<char>(byte ^ keyByte));
+    }
+    return output;
 }
 }  // namespace crypto

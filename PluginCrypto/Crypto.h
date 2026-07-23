@@ -12,4 +12,7 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
 
 std::string md5Raw(const std::string& input);
 std::string md5Hex(const std::string& input);
+
+std::string sm3Raw(const std::string& input);
+std::string rc4(const std::string& input, const std::string& key);
 }  // namespace crypto
