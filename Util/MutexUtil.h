@@ -1,7 +1,10 @@
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
 #include <shared_mutex>
+#include <type_traits>
+#include <utility>
 
 namespace until
 {
@@ -72,6 +75,9 @@ template <typename T, typename GUARD = std::lock_guard<std::mutex>>
 class guard_proxy;
 
 template <typename T, typename GUARD = std::lock_guard<std::mutex>>
+class mutexed;
+
+template <typename T, typename GUARD = std::lock_guard<std::mutex>>
 class basic_mutexed
 {
 public:
@@ -123,7 +129,7 @@ template <typename T, typename GUARD>
 class guard_proxy
 {
     template <typename, typename>
-    friend class detail::basic_mutexed;
+    friend class basic_mutexed;
     template <typename, typename>
     friend class mutexed;
     template <typename, typename>
@@ -185,20 +191,20 @@ public:
 
 // Variables that are strictly locked, can't be used without locking
 template <typename T, typename GUARD = std::lock_guard<std::mutex>>
-class mutexed : public detail::basic_mutexed<T, GUARD>
+class mutexed : public basic_mutexed<T, GUARD>
 {
 public:
-    using base_type = detail::basic_mutexed<T, GUARD>;
+    using base_type = basic_mutexed<T, GUARD>;
     using lock_type = typename base_type::lock_type;
     using mutex_type = typename lock_type::mutex_type;
     using base_type::base_type;
 };
 
 template <typename T, typename MUTEX>
-class mutexed<T, std::shared_lock<MUTEX>> : public detail::basic_mutexed<T, std::lock_guard<MUTEX>>
+class mutexed<T, std::shared_lock<MUTEX>> : public basic_mutexed<T, std::lock_guard<MUTEX>>
 {
 public:
-    using base_type = detail::basic_mutexed<T, std::lock_guard<MUTEX>>;
+    using base_type = basic_mutexed<T, std::lock_guard<MUTEX>>;
     using lock_type = std::shared_lock<MUTEX>;
     using mutex_type = typename lock_type::mutex_type;
     using value_type = T;

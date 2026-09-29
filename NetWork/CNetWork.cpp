@@ -1,6 +1,9 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
+#include <cstdio>
+#include <cerrno>
+#include <cstring>
 #include <numeric>
 
 #include "CNetWork.h"
@@ -33,7 +36,7 @@ std::string preprocessKey(std::string key)
 }  // namespace
 std::string to_string(HttpMethod method)
 {
-    static std::unordered_map<HttpMethod, std::string> methodMap = {
+    static const std::unordered_map<HttpMethod, std::string> methodMap = {
         {HttpMethod::DEL,     "DELETE" },
         {HttpMethod::PUT,     "PUT"    },
         {HttpMethod::GET,     "GET"    },
@@ -42,7 +45,8 @@ std::string to_string(HttpMethod method)
         {HttpMethod::PATCH,   "PATCH"  },
         {HttpMethod::OPTIONS, "OPTIONS"},
     };
-    return methodMap[method];
+    const auto methodIt = methodMap.find(method);
+    return methodIt == methodMap.end() ? std::string{} : methodIt->second;
 }
 
 CurlHeader NetWork::commonHeaders() const
@@ -195,6 +199,36 @@ void NetWork::setToCurl(CurlEasy& easy, const CurlOptions& options, bool options
             option.second->setToCurl(easy.handle());
         }
     }
+}
+
+bool downloadFileChecked(NetWork& client, const std::string& url, const std::filesystem::path& path, const CurlHeader& headers, bool headersAdd)
+{
+    if (url.empty())
+    {
+        NETWORK_LOG_ERROR("downloadFileChecked: empty url, filePath: {}", path.string());
+        return false;
+    }
+
+    FILE* file = fopen(path.string().c_str(), "wb");
+    if (!file)
+    {
+        NETWORK_LOG_ERROR("downloadFileChecked: cannot open file: {}, error: {}", path.string(), strerror(errno));
+        return false;
+    }
+
+    const bool downloaded = client.get(url, file, headers, headersAdd);
+    fclose(file);
+
+    std::error_code errorCode;
+    const auto fileSize = std::filesystem::file_size(path, errorCode);
+    if (!downloaded || errorCode || fileSize == 0)
+    {
+        std::filesystem::remove(path, errorCode);
+        NETWORK_LOG_ERROR("downloadFileChecked: download failed, url: {}, filePath: {}", url, path.string());
+        return false;
+    }
+
+    return true;
 }
 
 }  // namespace network

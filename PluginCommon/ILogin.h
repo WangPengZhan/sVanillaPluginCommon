@@ -58,5 +58,5 @@ protected:
     void setLoginWay(LoginWay way);
 
 protected:
-    LoginWay m_loginWay;
+    LoginWay m_loginWay{LoginWay::Unknow};
 };

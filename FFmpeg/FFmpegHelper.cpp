@@ -290,30 +290,27 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
 
     std::wstring workDir = utf8ToLocaleW(ffmpegWorkDir);
 #else
-
-    std::string command = "\"" + path + "\"";
-    for (const auto& arg : ffmpegArgVec)
+    std::vector<std::string> processArguments = {"/usr/bin/env"};
+    const char* oldEnv = getenv("LD_LIBRARY_PATH");
+    std::string libraryPath = ffmpegDir;
+    if (oldEnv && *oldEnv != '\0')
     {
-        command += " ";
-        if (arg.find(' ') != std::string::npos || arg.find('\"') != std::string::npos)
-        {
-            command += ("\"" + arg + "\"");
-        }
-        else
-        {
-            command += arg;
-        }
+        libraryPath += ":" + std::string(oldEnv);
     }
+    processArguments.push_back("LD_LIBRARY_PATH=" + libraryPath);
+    processArguments.push_back(path);
+    processArguments.insert(processArguments.end(), ffmpegArgVec.begin(), ffmpegArgVec.end());
 
     std::string workDir = ffmpegWorkDir;
-
-    const char* oldEnv = getenv("LD_LIBRARY_PATH");
-    std::string newEnv = ffmpegDir;
-    if (oldEnv)
+    std::string command;
+    for (const auto& argument : processArguments)
     {
-        newEnv += ":" + std::string(oldEnv);
+        if (!command.empty())
+        {
+            command += ' ';
+        }
+        command += argument;
     }
-    setenv("LD_LIBRARY_PATH", newEnv.c_str(), 1);
 #endif
 
     if (!workDir.empty() && !std::filesystem::exists(workDir))
@@ -336,7 +333,11 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     std::string stdErrStr;
 
     TinyProcessLib::Process ffmpegProcess(
+#ifdef _WIN32
         command, workDir,
+#else
+        processArguments, workDir,
+#endif
         [&](const char* bytes, size_t n) {
             stdOutStr.append(bytes, n);
         },

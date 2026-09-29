@@ -5,6 +5,7 @@
 #include <list>
 #include <unordered_map>
 #include <shared_mutex>
+#include <filesystem>
 
 #include "NetWork/CurlCpp/CurlHeader.h"
 #include "NetWork/CurlCpp/CurlOption.h"
@@ -129,6 +130,8 @@ protected:
     CurlHeader m_commonHeaders;
     CurlOptions m_commonOptions;
 };
+
+bool downloadFileChecked(NetWork& client, const std::string& url, const std::filesystem::path& path, const CurlHeader& headers = {}, bool headersAdd = false);
 
 }  // namespace network
 

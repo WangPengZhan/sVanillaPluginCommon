@@ -44,21 +44,33 @@ void AriaDownloader::start()
 
 void AriaDownloader::stop()
 {
-    aria2net::AriaClient::globalClient().RemoveAsync(m_gid);
+    const auto result = aria2net::AriaClient::globalClient().RemoveAsync(m_gid);
+    if (result.error.code != 0)
+    {
+        DOWNLOAD_LOG_ERROR("AriaDownloader stop error: {}, gid: {}", result.error.message, m_gid);
+    }
     m_status = Waiting;
     DOWNLOAD_LOG_INFO("AriaDownloader stop gid: {}", m_gid);
 }
 
 void AriaDownloader::pause()
 {
-    aria2net::AriaClient::globalClient().PauseAsync(m_gid);
+    const auto result = aria2net::AriaClient::globalClient().PauseAsync(m_gid);
+    if (result.error.code != 0)
+    {
+        DOWNLOAD_LOG_ERROR("AriaDownloader pause error: {}, gid: {}", result.error.message, m_gid);
+    }
     m_status = Paused;
     DOWNLOAD_LOG_INFO("AriaDownloader pause gid: {}", m_gid);
 }
 
 void AriaDownloader::resume()
 {
-    aria2net::AriaClient::globalClient().UnpauseAsync(m_gid);
+    const auto result = aria2net::AriaClient::globalClient().UnpauseAsync(m_gid);
+    if (result.error.code != 0)
+    {
+        DOWNLOAD_LOG_ERROR("AriaDownloader resume error: {}, gid: {}", result.error.message, m_gid);
+    }
     m_status = Downloading;
     DOWNLOAD_LOG_INFO("AriaDownloader resume gid: {}", m_gid);
 }
@@ -81,6 +93,7 @@ void AriaDownloader::downloadStatus()
         m_info.complete = std::stoull(m_downloadTellStatus.result.completedLength);
         m_info.speed = std::stoull(m_downloadTellStatus.result.downloadSpeed);
         m_info.total = std::stoull(m_downloadTellStatus.result.totalLength);
+        m_fileSize = m_info.total;
     }
     catch (const std::exception& e)
     {

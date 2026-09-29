@@ -55,9 +55,9 @@ std::string utf16ToUtf8(const std::wstring& utf16Str)
         return std::string();
     }
 
-    int utf8Size = ::WideCharToMultiByte(CP_UTF8, 0, utf16Str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    int utf8Size = ::WideCharToMultiByte(CP_UTF8, 0, utf16Str.data(), static_cast<int>(utf16Str.size()), nullptr, 0, nullptr, nullptr);
     std::string utf8Str(utf8Size, 0);
-    WideCharToMultiByte(CP_UTF8, 0, utf16Str.c_str(), -1, &utf8Str[0], utf8Size, nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, utf16Str.data(), static_cast<int>(utf16Str.size()), utf8Str.data(), utf8Size, nullptr, nullptr);
     return utf8Str;
 }
 #endif
@@ -71,7 +71,11 @@ std::string getModulePath()
     if (hModule != nullptr)
     {
         wchar_t path[MAX_PATH];
-        ::GetModuleFileName(hModule, path, sizeof(path));
+        const DWORD pathSize = ::GetModuleFileName(hModule, path, static_cast<DWORD>(std::size(path)));
+        if (pathSize == 0 || pathSize == std::size(path))
+        {
+            throw std::runtime_error("Failed to get complete module path.");
+        }
         modulePath = utf16ToUtf8(path);
     }
     else
@@ -88,7 +92,7 @@ std::string getModulePath()
     modulePath = path;
 #else
     char path[1024];
-    ssize_t count = readlink("/proc/self/exe", path, sizeof(path));
+    ssize_t count = readlink("/proc/self/exe", path, sizeof(path) - 1);
     if (count == -1)
     {
         throw std::runtime_error("Failed to read link /proc/self/exe.");
