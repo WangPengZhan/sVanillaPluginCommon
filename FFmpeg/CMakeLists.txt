@@ -4,7 +4,7 @@ project(FFmpeg
     VERSION 1.0.0 
     LANGUAGES CXX)
 
-file(GLOB_RECURSE SOURCES "*.cpp" "*.h")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "*.cpp" "*.h")
 
 add_compile_definitions(FFMPEG_DLL_EXPORTS)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

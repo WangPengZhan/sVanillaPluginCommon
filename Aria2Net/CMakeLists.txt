@@ -10,7 +10,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 
-file(GLOB_RECURSE SOURCES "*.cpp" "*.h")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "*.cpp" "*.h")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
