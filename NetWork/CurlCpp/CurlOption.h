@@ -66,6 +66,7 @@ class NoValueCurlOption : public CurlOption<bool, op>
 {
 public:
     NoValueCurlOption();
+    explicit NoValueCurlOption(bool value);
     NoValueCurlOption<op>* clone() const override;
 };
 

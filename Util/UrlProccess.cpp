@@ -27,7 +27,7 @@ std::string urlDecode(const std::string& encoded)
 
 std::string removeSpecialChars(const std::string& input)
 {
-    std::unordered_set<char32_t> specialSet(std::begin(specialChars), std::end(specialChars));
+    static const std::unordered_set<char32_t> specialSet(std::begin(specialChars), std::end(specialChars));
 
     std::string result;
     std::u8string_view sv(reinterpret_cast<const char8_t*>(input.data()), input.size());

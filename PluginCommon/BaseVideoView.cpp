@@ -293,6 +293,11 @@ std::string VideoInfoFull::parseNameRules(const std::string& ruleName) const
 
 std::string VideoInfoFull::fileName(bool update) const
 {
+    if (!downloadConfig)
+    {
+        return {};
+    }
+
     if (update)
     {
         dateTimeResolver.generator();

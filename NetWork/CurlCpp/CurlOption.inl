@@ -103,9 +103,15 @@ inline NoValueCurlOption<op>::NoValueCurlOption()
 }
 
 template <CURLoption op>
+inline NoValueCurlOption<op>::NoValueCurlOption(bool value)
+    : CurlOption<bool, op>(value)
+{
+}
+
+template <CURLoption op>
 inline NoValueCurlOption<op>* NoValueCurlOption<op>::clone() const
 {
-    return new NoValueCurlOption<op>();
+    return new NoValueCurlOption<op>(this->getValue());
 }
 
 template <>

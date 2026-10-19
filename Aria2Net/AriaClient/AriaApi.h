@@ -161,10 +161,87 @@ public:
     friend void to_json(nlohmann::json& json, const AriaOption& ariaOption)
     {
         json = nlohmann::json{
-            {"all-proxy",                 ariaOption.all_proxy                },
-            {"allow-overwrite",           ariaOption.allow_overwrite          },
-            {"allow-piece-length-change", ariaOption.allow_piece_length_change},
-            {"always-resume",             ariaOption.always_resume            },
+            {"all-proxy",                       ariaOption.all_proxy                      },
+            {"allow-overwrite",                 ariaOption.allow_overwrite                },
+            {"allow-piece-length-change",       ariaOption.allow_piece_length_change      },
+            {"always-resume",                   ariaOption.always_resume                  },
+            {"async-dns",                       ariaOption.async_dns                      },
+            {"auto-file-renaming",              ariaOption.auto_file_renaming             },
+            {"bt-enable-hook-after-hash-check", ariaOption.bt_enable_hook_after_hash_check},
+            {"bt-enable-lpd",                   ariaOption.bt_enable_lpd                  },
+            {"bt-force-encryption",             ariaOption.bt_force_encryption            },
+            {"bt-hash-check-seed",              ariaOption.bt_hash_check_seed             },
+            {"bt-max-open-files",               ariaOption.bt_max_open_files              },
+            {"bt-max-peers",                    ariaOption.bt_max_peers                   },
+            {"bt-metadata-only",                ariaOption.bt_metadata_only               },
+            {"bt-min-crypto-level",             ariaOption.bt_min_crypto_level            },
+            {"bt-remove-unselected-file",       ariaOption.bt_remove_unselected_file      },
+            {"bt-request-peer-speed-limit",     ariaOption.bt_request_peer_speed_limit    },
+            {"bt-require-crypto",               ariaOption.bt_require_crypto              },
+            {"bt-save-metadata",                ariaOption.bt_save_metadata               },
+            {"bt-seed-unverified",              ariaOption.bt_seed_unverified             },
+            {"bt-stop-timeout",                 ariaOption.bt_stop_timeout                },
+            {"bt-tracker-connect-timeout",      ariaOption.bt_tracker_connect_timeout     },
+            {"bt-tracker-interval",             ariaOption.bt_tracker_interval            },
+            {"bt-tracker-timeout",              ariaOption.bt_tracker_timeout             },
+            {"check-integrity",                 ariaOption.check_integrity                },
+            {"conditional-get",                 ariaOption.conditional_get                },
+            {"connect-timeout",                 ariaOption.connect_timeout                },
+            {"continue",                        ariaOption.continue_                      },
+            {"dir",                             ariaOption.dir                            },
+            {"dry-run",                         ariaOption.dry_run                        },
+            {"enable-http-keep-alive",          ariaOption.enable_http_keep_alive         },
+            {"enable-http-pipelining",          ariaOption.enable_http_pipelining         },
+            {"enable-mmap",                     ariaOption.enable_mmap                    },
+            {"enable-peer-exchange",            ariaOption.enable_peer_exchange           },
+            {"file-allocation",                 ariaOption.file_allocation                },
+            {"follow-metalink",                 ariaOption.follow_metalink                },
+            {"follow-torrent",                  ariaOption.follow_torrent                 },
+            {"force-save",                      ariaOption.force_save                     },
+            {"ftp-pasv",                        ariaOption.ftp_pasv                       },
+            {"ftp-reuse-connection",            ariaOption.ftp_reuse_connection           },
+            {"ftp-type",                        ariaOption.ftp_type                       },
+            {"hash-check-only",                 ariaOption.hash_check_only                },
+            {"http-accept-gzip",                ariaOption.http_accept_gzip               },
+            {"http-auth-challenge",             ariaOption.http_auth_challenge            },
+            {"http-no-cache",                   ariaOption.http_no_cache                  },
+            {"lowest-speed-limit",              ariaOption.lowest_speed_limit             },
+            {"max-connection-per-server",       ariaOption.max_connection_per_server      },
+            {"max-download-limit",              ariaOption.max_download_limit             },
+            {"max-file-not-found",              ariaOption.max_file_not_found             },
+            {"max-mmap-limit",                  ariaOption.max_mmap_limit                 },
+            {"max-tries",                       ariaOption.max_tries                      },
+            {"max-upload-limit",                ariaOption.max_upload_limit               },
+            {"max-resume-failure-tries",        ariaOption.max_resume_failure_tries       },
+            {"metalink-enable-unique-protocol", ariaOption.metalink_enable_unique_protocol},
+            {"metalink-preferred-protocol",     ariaOption.metalink_preferred_protocol    },
+            {"min-split-size",                  ariaOption.min_split_size                 },
+            {"no-file-allocation-limit",        ariaOption.no_file_allocation_limit       },
+            {"no-netrc",                        ariaOption.no_netrc                       },
+            {"out",                             ariaOption.out                            },
+            {"parameterized-uri",               ariaOption.parameterized_uri              },
+            {"pause-metadata",                  ariaOption.pause_metadata                 },
+            {"piece-length",                    ariaOption.piece_length                   },
+            {"proxy-method",                    ariaOption.proxy_method                   },
+            {"realtime-chunk-checksum",         ariaOption.real_time_chunk_checksum       },
+            {"remote-time",                     ariaOption.remote_time                    },
+            {"remove-control-file",             ariaOption.remove_control_file            },
+            {"reuse-uri",                       ariaOption.reuse_uri                      },
+            {"rpc-save-upload-metadata",        ariaOption.rpc_save_upload_metadata       },
+            {"save-not-found",                  ariaOption.save_not_found                 },
+            {"seed-ratio",                      ariaOption.seed_ratio                     },
+            {"seed-time",                       ariaOption.seed_time                      },
+            {"select-file",                     ariaOption.select_file                    },
+            {"split",                           ariaOption.split                          },
+            {"stream-piece-selector",           ariaOption.stream_piece_selector          },
+            {"timeout",                         ariaOption.timeout                        },
+            {"uri-selector",                    ariaOption.uri_selector                   },
+            {"use-head",                        ariaOption.use_head                       },
+            {"user-agent",                      ariaOption.user_agent                     },
+            {"allow-overwrite-set",             ariaOption.allow_overwrite_set            },
+            {"allow-piece-length-change-set",   ariaOption.allow_piece_length_change_set  },
+            {"always-resume-set",               ariaOption.always_resume_set              },
+            {"async-dns-set",                   ariaOption.async_dns_set                  }
         };
     }
 
@@ -631,9 +708,11 @@ public:
         {
             ariaSendOption.dir = json["dir"].get<std::string>();
         }
-        if (json.contains("headers"))
+        // The RPC option key is "header" (same one to_json writes), reading
+        // "headers" silently dropped every custom header.
+        if (json.contains("header"))
         {
-            ariaSendOption.header = json["headers"].get<std::list<std::string>>();
+            ariaSendOption.header = json["header"].get<std::list<std::string>>();
         }
     }
 };

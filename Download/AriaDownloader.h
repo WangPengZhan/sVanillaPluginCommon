@@ -1,12 +1,13 @@
 #pragma once
 
+#include "Download/FileDownloader.h"
 #include "AbstractDownloader.h"
 #include "Aria2Net/AriaClient/AriaApi.h"
 
 namespace download
 {
 
-class AriaDownloader : public AbstractDownloader
+class AriaDownloader : public FileDownloader
 {
 public:
     AriaDownloader();
@@ -23,15 +24,16 @@ public:
 
     const aria2net::AriaSendOption& sendOption() const;
     void setAriaSendOption(const aria2net::AriaSendOption& option);
-    const std::string& path() const;
-    void setPath(const std::string& path);
-    const std::string& filename() const;
-    void setFilename(const std::string& filename);
     void setUris(const std::list<std::string>& uris);
     const std::list<std::string>& uris() const;
     const std::string& gid() const;
     const std::size_t& fileSize() const;
     const aria2net::AriaTellStatus& nowStatus();
+
+    void setPath(std::string path) override;
+    const std::string& path() const override;
+    void setFilename(std::string filename) override;
+    const std::string& filename() const override;
 
 private:
     std::string m_gid;
@@ -39,7 +41,6 @@ private:
     std::list<std::string> m_uris;
     std::size_t m_fileSize{};
     aria2net::AriaTellStatus m_downloadTellStatus;
-    bool m_finished;
 };
 
 }  // namespace download

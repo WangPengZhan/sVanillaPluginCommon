@@ -20,7 +20,16 @@ CurlHeader::CurlHeader(std::initializer_list<std::string> headers)
     curl_slist* newHeader = nullptr;
     for (const auto& header : headers)
     {
-        newHeader = curl_slist_append(newHeader, header.c_str());
+        // curl_slist_append returns nullptr on failure and leaves the previously
+        // built list unreachable, so keep the old head until the append succeeds.
+        curl_slist* appended = curl_slist_append(newHeader, header.c_str());
+        if (!appended)
+        {
+            curl_slist_free_all(newHeader);
+            newHeader = nullptr;
+            break;
+        }
+        newHeader = appended;
     }
     m_headers.reset(newHeader);
 }

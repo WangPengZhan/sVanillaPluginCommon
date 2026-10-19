@@ -15,9 +15,16 @@ constexpr char statusFinished[] = "Finished";
 constexpr char statusError[] = "Error";
 }  // namespace
 
-const DownloadInfo& AbstractDownloader::info() const
+DownloadInfo AbstractDownloader::info() const
 {
+    std::lock_guard lk(m_infoMutex);
     return m_info;
+}
+
+void AbstractDownloader::setInfo(const DownloadInfo& info)
+{
+    std::lock_guard lk(m_infoMutex);
+    m_info = info;
 }
 
 const std::string& AbstractDownloader::stage() const

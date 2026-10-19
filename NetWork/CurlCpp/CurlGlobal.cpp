@@ -18,7 +18,7 @@ CurlGlobal::CurlGlobal()
 
 CurlGlobal::CurlGlobal(long flag)
 {
-    curl_global_init(CURL_GLOBAL_ALL);
+    curl_global_init(flag);
 }
 
 CurlGlobal::~CurlGlobal()

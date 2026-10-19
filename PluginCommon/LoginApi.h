@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <tuple>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,7 @@ public:
     };
 
     using LoginResource = std::array<std::vector<uint8_t>, 7>;
+    static_assert(std::tuple_size<LoginResource>::value == Refresh + 1, "LoginResource size does not match ResourceIndex");
 
     // thread-safe
     virtual LoginStatus getLoginStatus() = 0;

@@ -10,7 +10,7 @@ template <typename Context>
 size_t writeFunc(void* data, size_t size, size_t nmemb, void* stream)
 {
     const size_t realsize = size * nmemb;
-    Context const ctx = static_cast<Context*>(stream);
+    auto* const ctx = static_cast<Context*>(stream);
     ctx->write(static_cast<const char*>(data), realsize);
     return realsize;
 }

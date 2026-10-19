@@ -154,7 +154,7 @@ std::string aes128Encrypt(const std::string& text, const std::string& mode, cons
     return format == "base64" ? encoding::base64Encode(result) : encoding::hexEncode(result);
 }
 
-std::string aes128EcbDecrypt(const std::string& ciphertext, const std::string& key, const std::string& iv, const std::string& format)
+std::string aes128EcbDecrypt(const std::string& ciphertext, const std::string& key, [[maybe_unused]] const std::string& iv, const std::string& format)
 {
     if (key.size() != aes128KeySize)
     {
@@ -255,12 +255,7 @@ std::string rsaNoPaddingPublicEncryptHexLower(const std::string& text, const std
         return {};
     }
 
-    std::string encryptedStr = encoding::hexEncode(std::string(reinterpret_cast<char*>(encrypted.data()), outLen));
-    std::transform(encryptedStr.begin(), encryptedStr.end(), encryptedStr.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-
-    return encryptedStr;
+    return encoding::hexEncode(std::string(reinterpret_cast<char*>(encrypted.data()), outLen), true);
 }
 
 std::string md5Raw(const std::string& input)
@@ -270,13 +265,7 @@ std::string md5Raw(const std::string& input)
 
 std::string md5Hex(const std::string& input)
 {
-    std::stringstream ss;
-    const std::string digest = md5Raw(input);
-    for (const unsigned char c : digest)
-    {
-        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(c);
-    }
-    return ss.str();
+    return encoding::hexEncode(md5Raw(input), true);
 }
 
 std::string sm3Raw(const std::string& input)

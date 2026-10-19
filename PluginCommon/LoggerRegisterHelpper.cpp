@@ -6,8 +6,8 @@
 
 namespace
 {
-constexpr int logFileMaxSize = 100 * 1024 * 1024;  // 20M
-}
+constexpr int logFileMaxSize = 100 * 1024 * 1024;
+constexpr int logFileMaxCount = 100;
 
 template <typename T>
 void freeObject(T* obj)
@@ -18,12 +18,14 @@ void freeObject(T* obj)
         delete obj;
     }
 }
+}  // namespace
 
 void LoggerRegisterHelpper::registerLogger(std::string name, std::string path)
 {
     using rotating_file_sink_mt = spdlog::sinks::rotating_file_sink_mt;
-    auto sink = std::shared_ptr<rotating_file_sink_mt>(new rotating_file_sink_mt(path, logFileMaxSize, 100), freeObject<rotating_file_sink_mt>);
-    auto new_logger = std::shared_ptr<spdlog::logger>(new spdlog::logger(std::move(name), std::move(sink)), freeObject<spdlog::logger>);
+    auto sink =
+        std::shared_ptr<rotating_file_sink_mt>(new rotating_file_sink_mt(std::move(path), logFileMaxSize, logFileMaxCount), freeObject<rotating_file_sink_mt>);
+    auto new_logger = std::shared_ptr<spdlog::logger>(new spdlog::logger(name, std::move(sink)), freeObject<spdlog::logger>);
     spdlog::details::registry::instance().initialize_logger(new_logger);
 }
 

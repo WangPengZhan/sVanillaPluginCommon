@@ -67,8 +67,6 @@ private:
     [[nodiscard]] std::string GetToken() const;
     std::string ConstructSendData(std::string methodName, nlohmann::json::array_t params);
     std::string Request(const std::string& url, const std::string& params);
-    template <typename Result>
-    Result GetResult(const AriaSendData& sendData);
 
 private:
     template <typename Result>
@@ -91,23 +89,6 @@ Result AriaClient::Call(std::string methodName, nlohmann::json::array_t params)
     catch (const std::exception& e)
     {
         NETWORK_LOG_ERROR("AriaClient parse result error: {}, response: {}", e.what(), res);
-        return Result();
-    }
-}
-
-template <typename Result>
-inline Result AriaClient::GetResult(const AriaSendData& sendData)
-{
-    std::string strParams = sendData.toString();
-    std::string strResponse = Request(GetRpcUri(), strParams);
-    try
-    {
-        nlohmann::json result = nlohmann::json::parse(strResponse);
-        return Result(result);
-    }
-    catch (const std::exception& e)
-    {
-        NETWORK_LOG_ERROR("AriaClient parse result error: {}, response: {}", e.what(), strResponse);
         return Result();
     }
 }

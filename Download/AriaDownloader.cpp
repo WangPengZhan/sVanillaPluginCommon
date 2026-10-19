@@ -2,16 +2,16 @@
 #include "Aria2Net/AriaClient/AriaClient.h"
 #include "DownloadLog.h"
 
+#include <algorithm>
+
 namespace download
 {
 AriaDownloader::AriaDownloader()
-    : m_finished(false)
 {
 }
 
 AriaDownloader::AriaDownloader(std::list<std::string> uris, std::string path, std::string filename)
-    : m_finished(false)
-    , m_uris(std::move(uris))
+    : m_uris(std::move(uris))
 {
     m_ariaSendOption.dir = std::move(path);
     m_ariaSendOption.out = std::move(filename);
@@ -20,7 +20,6 @@ AriaDownloader::AriaDownloader(std::list<std::string> uris, std::string path, st
 AriaDownloader::AriaDownloader(std::list<std::string> uris, const aria2net::AriaSendOption& option)
     : m_ariaSendOption(option)
     , m_uris(std::move(uris))
-    , m_finished(false)
 {
 }
 
@@ -49,7 +48,7 @@ void AriaDownloader::stop()
     {
         DOWNLOAD_LOG_ERROR("AriaDownloader stop error: {}, gid: {}", result.error.message, m_gid);
     }
-    m_status = Waiting;
+    m_status = Stopped;
     DOWNLOAD_LOG_INFO("AriaDownloader stop gid: {}", m_gid);
 }
 
@@ -88,19 +87,24 @@ void AriaDownloader::downloadStatus()
         m_status = Error;
         return;
     }
+
+    DownloadInfo info;
     try
     {
-        m_info.complete = std::stoull(m_downloadTellStatus.result.completedLength);
-        m_info.speed = std::stoull(m_downloadTellStatus.result.downloadSpeed);
-        m_info.total = std::stoull(m_downloadTellStatus.result.totalLength);
-        m_fileSize = m_info.total;
+        info.complete = std::stoull(m_downloadTellStatus.result.completedLength);
+        info.speed = std::stoull(m_downloadTellStatus.result.downloadSpeed);
+        info.total = std::stoull(m_downloadTellStatus.result.totalLength);
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        DOWNLOAD_LOG_ERROR("AriaDownloader parse status error: {}, gid: {}", e.what(), m_gid);
+        return;
     }
 
-    if (m_info.complete == m_info.total && m_downloadTellStatus.result.status == "complete")
+    setInfo(info);
+    m_fileSize = info.total;
+
+    if (info.complete == info.total && m_downloadTellStatus.result.status == "complete")
     {
         m_status = Finished;
     }
@@ -125,9 +129,9 @@ const std::string& AriaDownloader::path() const
     return m_ariaSendOption.dir;
 }
 
-void AriaDownloader::setPath(const std::string& path)
+void AriaDownloader::setPath(std::string path)
 {
-    m_ariaSendOption.dir = path;
+    m_ariaSendOption.dir = std::move(path);
 }
 
 const std::string& AriaDownloader::filename() const
@@ -135,9 +139,9 @@ const std::string& AriaDownloader::filename() const
     return m_ariaSendOption.out;
 }
 
-void AriaDownloader::setFilename(const std::string& filename)
+void AriaDownloader::setFilename(std::string filename)
 {
-    m_ariaSendOption.out = filename;
+    m_ariaSendOption.out = std::move(filename);
 }
 
 void AriaDownloader::setUris(const std::list<std::string>& uris)

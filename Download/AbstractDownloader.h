@@ -2,6 +2,7 @@
 #include "Aria2Net/AriaClient/AriaApi.h"
 #include <string>
 #include <atomic>
+#include <mutex>
 
 namespace download
 {
@@ -47,7 +48,7 @@ public:
     virtual void downloadStatus() = 0;
     virtual void finish() = 0;
 
-    const DownloadInfo& info() const;
+    DownloadInfo info() const;
     const std::string& stage() const;
 
     std::string guid() const;
@@ -55,10 +56,14 @@ public:
     Status status() const;
 
 protected:
+    void setInfo(const DownloadInfo& info);
+
+protected:
     std::atomic<Status> m_status = Waiting;
     std::string m_guid;
     std::string m_stage;
     DownloadInfo m_info;
+    mutable std::mutex m_infoMutex;
 };
 
 std::string statusToString(AbstractDownloader::Status status);

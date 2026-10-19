@@ -1,6 +1,8 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include <ctime>
+#include <stdexcept>
 
 #include <iostream>
 #include <string>
@@ -22,8 +24,13 @@
 std::string convertTimestamp(long long timestamp)
 {
     std::chrono::time_point<std::chrono::system_clock> tp = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(timestamp));
-    std::time_t tt = std::chrono::system_clock::to_time_t(tp);
-    std::tm* t = std::gmtime(&tt);
+    const std::time_t tt = std::chrono::system_clock::to_time_t(tp);
+    const std::tm* t = std::gmtime(&tt);
+    if (!t)
+    {
+        return {};
+    }
+
     std::ostringstream oss;
     oss << std::put_time(t, "%F");
     return oss.str();

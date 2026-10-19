@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 project(PluginCommon 
     VERSION 1.0.0 
-    DESCRIPTION "Aria2 cpp wrapper"
+    DESCRIPTION "sVanilla plugin common interfaces"
     LANGUAGES CXX)
 
 

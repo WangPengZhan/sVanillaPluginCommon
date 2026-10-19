@@ -126,8 +126,13 @@ std::string base64Decode(const std::string& input)
 
 std::string hexEncode(const std::string& input)
 {
+    return hexEncode(input, false);
+}
+
+std::string hexEncode(const std::string& input, bool lowercase)
+{
     std::stringstream ss;
-    ss << std::hex << std::uppercase;
+    ss << std::hex << (lowercase ? std::nouppercase : std::uppercase);
     for (const unsigned char c : input)
     {
         ss << std::setw(2) << std::setfill('0') << static_cast<int>(c);
@@ -138,11 +143,21 @@ std::string hexEncode(const std::string& input)
 std::string hexDecode(const std::string& input)
 {
     std::string result;
+    if (input.length() % 2 != 0)
+    {
+        return result;
+    }
+
+    result.reserve(input.length() / 2);
     for (size_t i = 0; i < input.length(); i += 2)
     {
-        const std::string byteString = input.substr(i, 2);
-        const char byte = static_cast<char>(std::stoi(byteString, nullptr, 16));
-        result.push_back(byte);
+        const int high = hexValue(input[i]);
+        const int low = hexValue(input[i + 1]);
+        if (high < 0 || low < 0)
+        {
+            return {};
+        }
+        result.push_back(static_cast<char>((high << 4) | low));
     }
     return result;
 }
@@ -206,7 +221,7 @@ std::vector<uint32_t> utf8ToCodePoints(const std::string& str)
             cps.push_back(c);
             i++;
         }
-        else if (c < 0xE0 && i + 1 < len && (p[i + 1] >> 6) == 0x2)
+        else if ((c & 0xE0) == 0xC0 && i + 1 < len && (p[i + 1] >> 6) == 0x2)
         {
             cps.push_back(((c & 0x1F) << 6) | (p[i + 1] & 0x3F));
             i += 2;

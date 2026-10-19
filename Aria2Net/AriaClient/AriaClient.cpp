@@ -196,7 +196,7 @@ std::string AriaClient::ConstructSendData(std::string methodName, nlohmann::json
 {
     AriaSendData data;
     data.id = GetGuid();
-    data.jsonrpc = "2.0";
+    data.jsonrpc = JSONRPC;
     data.method = std::move(methodName);
     data.params.reserve(params.size() + 1);
     data.params = std::move(params);

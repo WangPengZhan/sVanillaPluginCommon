@@ -16,9 +16,10 @@ public:
         std::unique_lock locker(m_mutex);
         ++m_writeWaitCount;
         m_writeCondition.wait(locker, [this]() {
-            return m_readCount == 0;
+            return m_readCount == 0 && !m_writeLocked;
         });
         --m_writeWaitCount;
+        m_writeLocked = true;
         locker.release();
     }
 
@@ -26,14 +27,16 @@ public:
     {
         std::unique_lock locker(m_mutex);
         m_readCondition.wait(locker, [this]() {
-            return m_writeWaitCount == 0;
+            return m_writeWaitCount == 0 && !m_writeLocked;
         });
         ++m_readCount;
     }
 
+    // Called with m_mutex still held by this thread (ownership handed over by lock()).
     void unlock()
     {
-        size_t writeCount = m_writeWaitCount;
+        m_writeLocked = false;
+        const size_t writeCount = m_writeWaitCount;
         m_mutex.unlock();
         if (writeCount > 0)
         {
@@ -69,6 +72,7 @@ private:
     std::condition_variable m_writeCondition;
     size_t m_readCount{};
     size_t m_writeWaitCount{};
+    bool m_writeLocked{};
 };
 
 template <typename T, typename GUARD = std::lock_guard<std::mutex>>

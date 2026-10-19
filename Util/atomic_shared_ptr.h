@@ -1,6 +1,7 @@
 #include <atomic>
 #include <memory>
 #include <condition_variable>
+#include <mutex>
 #include <thread>
 #include <version>
 
@@ -16,15 +17,14 @@ struct atomic<shared_ptr<T>>
     {
         return false;
     }
-    constexpr atomic() noexcept {};
+    constexpr atomic() noexcept = default;
     atomic(shared_ptr<T> desired) noexcept
         : ptr_(std::move(desired))
     {
-        nullptr;
-    };
+    }
     atomic(const atomic&) = delete;
     void operator=(const atomic&) = delete;
-    void store(shared_ptr<T> desired, memory_order order = memory_order::seq_cst) noexcept
+    void store(shared_ptr<T> desired, memory_order order = memory_order_seq_cst) noexcept
     {
         std::lock_guard<std::mutex> lk(cv_m_);
         atomic_store_explicit(&ptr_, std::move(desired), order);
@@ -33,7 +33,7 @@ struct atomic<shared_ptr<T>>
     {
         store(std::move(desired));
     }
-    shared_ptr<T> load(memory_order order = memory_order::seq_cst) const noexcept
+    shared_ptr<T> load(memory_order order = memory_order_seq_cst) const noexcept
     {
         return atomic_load_explicit(&ptr_, order);
     }
@@ -41,27 +41,30 @@ struct atomic<shared_ptr<T>>
     {
         return load();
     }
-    shared_ptr<T> exchange(shared_ptr<T> desired, memory_order order = memory_order::seq_cst) noexcept
+    shared_ptr<T> exchange(shared_ptr<T> desired, memory_order order = memory_order_seq_cst) noexcept
     {
+        std::lock_guard<std::mutex> lk(cv_m_);
         return atomic_exchange_explicit(&ptr_, std::move(desired), order);
     }
     bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order success, memory_order failure) noexcept
     {
+        std::lock_guard<std::mutex> lk(cv_m_);
         return atomic_compare_exchange_weak_explicit(&ptr_, &expected, std::move(desired), success, failure);
     }
     bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order success, memory_order failure) noexcept
     {
+        std::lock_guard<std::mutex> lk(cv_m_);
         return atomic_compare_exchange_strong_explicit(&ptr_, &expected, std::move(desired), success, failure);
     }
-    bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order order = memory_order::seq_cst) noexcept
+    bool compare_exchange_weak(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order order = memory_order_seq_cst) noexcept
     {
         return compare_exchange_weak(expected, std::move(desired), order, convert_order(order));
     }
-    bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order order = memory_order::seq_cst) noexcept
+    bool compare_exchange_strong(shared_ptr<T>& expected, shared_ptr<T> desired, memory_order order = memory_order_seq_cst) noexcept
     {
         return compare_exchange_strong(expected, std::move(desired), order, convert_order(order));
     }
-    void wait(shared_ptr<T> old, memory_order order = memory_order::seq_cst) const noexcept
+    void wait(shared_ptr<T> old, memory_order order = memory_order_seq_cst) const noexcept
     {
         std::unique_lock<std::mutex> lk(cv_m_);
         cv_.wait(lk, [&] {
@@ -78,18 +81,18 @@ struct atomic<shared_ptr<T>>
     }
 
 private:
-    shared_ptr<T> ptr_;
+    shared_ptr<T> ptr_{};
     mutable std::condition_variable cv_;
     mutable std::mutex cv_m_;
     constexpr memory_order convert_order(memory_order order)
     {
         switch (order)
         {
-        case std::memory_order_acq_rel:
-            return std::memory_order_acquire;
+        case memory_order_acq_rel:
+            return memory_order_acquire;
 
-        case std::memory_order_release:
-            return std::memory_order_relaxed;
+        case memory_order_release:
+            return memory_order_relaxed;
         default:
             return order;
         }
