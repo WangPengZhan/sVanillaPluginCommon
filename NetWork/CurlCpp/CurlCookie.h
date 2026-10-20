@@ -1,6 +1,5 @@
-
 #pragma once
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -20,7 +19,7 @@ constexpr char delete_content[] = "deleted";
 class CurlCookie
 {
 public:
-    using CookieValueType = std::unordered_map<std::string, std::string>;
+    using CookieValueType = std::map<std::string, std::string>;
     enum SameSiteSend
     {
         Invalid,
@@ -35,6 +34,7 @@ public:
     CurlCookie() = default;
     CurlCookie(const std::string& context);
     CurlCookie(std::string name, std::string value);
+    virtual ~CurlCookie() = default;
 
     CurlCookie& setName(const std::string& name);
     const std::string& name() const;

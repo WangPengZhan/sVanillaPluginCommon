@@ -1,6 +1,5 @@
-
 #pragma once
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -13,7 +12,7 @@ class CurlCookie;
 class CurlCookies
 {
 public:
-    using CurlCookiesValueType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+    using CurlCookiesValueType = std::map<std::string, std::map<std::string, std::string>>;
 
     CurlCookies() = default;
     CurlCookies(const std::string& context);

@@ -373,7 +373,7 @@ CurlCookie CurlCookie::parseCookie(const std::string& content)
     std::string_view content_view(content);
     if (content_view.starts_with(set_cookie_header))
     {
-        content_view = std::string_view(content.data() + std::size(set_cookie_header) - 1);
+        content_view.remove_prefix(sizeof(set_cookie_header) - 1);
     }
 
     bool hasName = false;
@@ -413,21 +413,31 @@ CurlCookie CurlCookie::parseCookie(const std::string& content)
             value = std::string_view();
         }
 
-        if (!isDefaultKey(key) && !hasName)
+        auto trim = [](std::string_view sv) {
+            const auto begin = sv.find_first_not_of(" \t");
+            if (begin == std::string_view::npos)
+            {
+                return std::string_view();
+            }
+            return sv.substr(begin, sv.find_last_not_of(" \t") - begin + 1);
+        };
+
+        const std::string realkey = preprocessKey(std::string(trim(key)));
+        const std::string realValue = std::string(trim(value));
+
+        if (!isDefaultKey(realkey) && !hasName)
         {
-            curlCookie.m_name = key;
+            curlCookie.m_name = realkey;
             hasName = true;
         }
 
-        std::string realkey = preprocessKey(std::string(key));
-        std::string realValue = std::string(value);
         if (toLower(realValue) == delete_content)
         {
             curlCookie.m_cookieValue.erase(realkey);
         }
         else
         {
-            curlCookie.m_cookieValue.insert(std::make_pair(realkey, realValue));
+            curlCookie.m_cookieValue.insert_or_assign(realkey, realValue);
         }
 
         if (content_view.empty())

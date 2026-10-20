@@ -24,7 +24,7 @@ public:
     CurlEasy(const CurlEasy& other) = delete;
     CurlEasy& operator=(const CurlEasy& other) = delete;
 
-    void perform();
+    bool perform();
     void reset();
 
     void setOption(const AbstractOption& option);
@@ -38,7 +38,7 @@ public:
     CURL* handle() const;
 
     template <typename T>
-    void getInfo(CURLINFO info, T& value) const;
+    bool getInfo(CURLINFO info, T& value) const;
 
 private:
     CURLPtr m_curl;

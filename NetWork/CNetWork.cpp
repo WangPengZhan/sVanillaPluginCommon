@@ -95,16 +95,10 @@ std::string NetWork::paramsString(const ParamType& params)
         if (it != params.begin())
         {
             res += "&";
-            res += it->first;
-            res += "=";
-            res += it->second;
         }
-        else
-        {
-            res += it->first;
-            res += "=";
-            res += it->second;
-        }
+        res += util::urlEncode(it->first);
+        res += "=";
+        res += util::urlEncode(it->second);
     }
     return res;
 }
@@ -114,16 +108,32 @@ NetWork::ParamType NetWork::parseHeader(const std::string& header)
     ParamType headers;
     std::string_view context(header);
 
+    auto trim = [](std::string_view sv) {
+        const auto begin = sv.find_first_not_of(" \t");
+        if (begin == std::string_view::npos)
+        {
+            return std::string_view();
+        }
+        const auto end = sv.find_last_not_of(" \t");
+        return sv.substr(begin, end - begin + 1);
+    };
+
     while (!context.empty())
     {
         size_t lineEnd = context.find("\r\n");
+        std::string_view line;
         if (std::string_view::npos == lineEnd)
         {
-            break;
+            // The last line is not required to be terminated by CRLF, so the
+            // remainder of the input still counts as a header line.
+            line = context;
+            context = std::string_view();
         }
-
-        std::string_view line = context.substr(0, lineEnd);
-        context = context.substr(lineEnd + 2);
+        else
+        {
+            line = context.substr(0, lineEnd);
+            context = context.substr(lineEnd + 2);
+        }
 
         if (line.empty())
         {
@@ -133,20 +143,8 @@ NetWork::ParamType NetWork::parseHeader(const std::string& header)
         size_t split = line.find(':');
         if (std::string_view::npos != split)
         {
-            std::string_view key_view = line.substr(0, split);
-            std::string_view value_view = line.substr(split + 1);
-
-            auto trim = [](std::string_view sv) {
-                const char* whitespace = " \t";
-                auto pos = sv.find_first_not_of(whitespace) < sv.size() ? sv.find_first_not_of(whitespace) : sv.size();
-                sv.remove_prefix(pos);
-                pos = (sv.find_last_not_of(whitespace) + 1 < sv.size()) ? sv.find_last_not_of(whitespace) + 1 : sv.size();
-                sv.remove_suffix(sv.size() - pos);
-                return sv;
-            };
-
-            std::string key(trim(key_view));
-            std::string value(trim(value_view));
+            std::string key(trim(line.substr(0, split)));
+            std::string value(trim(line.substr(split + 1)));
             key = preprocessKey(key);
             if (headers.find(key) == headers.end())
             {
@@ -174,7 +172,7 @@ CurlHeader NetWork::setToCurl(CurlEasy& easy, const CurlHeader& headers, bool he
         }
 
         headersCopy.add(common.begin(), common.end());
-        curl_easy_setopt(easy.handle(), CURLOPT_HTTPHEADER, headersCopy.get());
+        curl_easy_setopt(easy.handle(), CURLOPT_HTTPHEADER, headersCopy.handle());
         return headersCopy;
     }
     else

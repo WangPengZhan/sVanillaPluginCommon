@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <mutex>
 #include <sstream>
 
 #include "CurlCookie.h"
@@ -15,6 +16,25 @@ CurlCookieJar::CurlCookieJar(std::string filename)
     {
         std::ofstream stream(m_filename);
     }
+}
+
+CurlCookieJar::CurlCookieJar(const CurlCookieJar& other)
+{
+    std::lock_guard lk(other.m_mutex);
+    m_filename = other.m_filename;
+}
+
+CurlCookieJar& CurlCookieJar::operator=(const CurlCookieJar& other)
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    std::scoped_lock lk(m_mutex, other.m_mutex);
+    m_filename = other.m_filename;
+    m_cacheValid = false;
+    return *this;
 }
 
 CurlCookieJar::operator bool() const
@@ -58,20 +78,40 @@ void CurlCookieJar::setToCurl(CurlEasy& easy)
 
 CurlCookies CurlCookieJar::toCookies() const
 {
-    CurlCookies cookies;
-    if (this->operator bool())
+    if (!this->operator bool())
     {
-        std::ifstream inputFile(m_filename);
+        std::lock_guard lk(m_mutex);
+        m_cacheValid = false;
+        return CurlCookies();
+    }
 
-        if (!inputFile)
+    std::error_code errorCode;
+    const auto writeTime = std::filesystem::last_write_time(m_filename, errorCode);
+    {
+        std::lock_guard lk(m_mutex);
+        if (m_cacheValid && !errorCode && m_cacheTime == writeTime)
         {
-            return cookies;
+            return m_cache;
         }
+    }
 
-        std::stringstream buffer;
-        buffer << inputFile.rdbuf();
+    CurlCookies cookies;
+    std::ifstream inputFile(m_filename);
+    if (!inputFile)
+    {
+        return cookies;
+    }
 
-        cookies = CurlCookies::parseCookies(buffer.str());
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf();
+    cookies = CurlCookies::parseCookies(buffer.str());
+
+    if (!errorCode)
+    {
+        std::lock_guard lk(m_mutex);
+        m_cache = cookies;
+        m_cacheTime = writeTime;
+        m_cacheValid = true;
     }
 
     return cookies;

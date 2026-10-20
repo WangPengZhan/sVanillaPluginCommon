@@ -29,6 +29,31 @@ inline std::wstring utf8ToLocaleW(const std::string& str)
     return wstr;
 }
 
+static std::wstring quoteWindowsArgument(const std::wstring& argw)
+{
+    if (!argw.empty() && argw.find_first_of(L" \t\"") == std::wstring::npos)
+        return argw;
+
+    std::wstring quoted(1, L'"');
+    size_t backslashes = 0;
+    for (const wchar_t ch : argw)
+    {
+        if (ch == L'\\')
+        {
+            ++backslashes;
+            continue;
+        }
+        quoted.append(backslashes * (ch == L'"' ? 2 : 1), L'\\');
+        backslashes = 0;
+        if (ch == L'"')
+            quoted += L'\\';
+        quoted += ch;
+    }
+    quoted.append(backslashes * 2, L'\\');
+    quoted += L'"';
+    return quoted;
+}
+
 inline std::string localeWToUtf8(const std::wstring& wstr)
 {
     if (wstr.empty())
@@ -242,8 +267,8 @@ std::future<bool> FFmpegHelper::startFFmpegAsync(const MergeTsInfo& mergeInfo, s
 
 bool FFmpegHelper::startFFmpeg(const MergeTsInfo& mergeInfo, std::function<void()> errorFunc, std::function<void()> finishedFunc)
 {
-    std::vector<std::string> ffmpegArgVec = {"-f", "concat", "-safe", "0", "-i", mergeInfo.concatFile.c_str(), "-c", "copy", mergeInfo.targetVideo.c_str(),
-                                             "-y"};
+    std::vector<std::string> ffmpegArgVec = {
+        "-y", "-f", "concat", "-safe", "0", "-i", mergeInfo.concatFile.c_str(), "-c", "copy", mergeInfo.targetVideo.c_str()};
     return startFFmpeg(ffmpegArgVec, std::move(errorFunc), std::move(finishedFunc));
 }
 
@@ -277,15 +302,7 @@ bool FFmpegHelper::startFFmpeg(const std::vector<std::string>& ffmpegArgVec, std
     for (const auto& arg : ffmpegArgVec)
     {
         command += L" ";
-        std::wstring argw = utf8ToLocaleW(arg);
-        if (argw.find(L' ') != std::wstring::npos || argw.find(L'\"') != std::wstring::npos)
-        {
-            command += (L"\"" + argw + L"\"");
-        }
-        else
-        {
-            command += argw;
-        }
+        command += quoteWindowsArgument(utf8ToLocaleW(arg));
     }
 
     std::wstring workDir = utf8ToLocaleW(ffmpegWorkDir);

@@ -57,7 +57,7 @@ CurlCookies::operator std::string() const
     {
         cookieString += pair.first;
         cookieString += ": ";
-        cookieString += cookie(pair.first);
+        cookieString += cookie(pair.first).content();
         cookieString += "\r\n";
     }
     return cookieString;
@@ -77,7 +77,7 @@ CurlCookies& CurlCookies::addCurlCookie(const CurlCookie& cookie)
 {
     for (const auto& valuePair : cookie.m_cookieValue)
     {
-        if (valuePair.first == cookie.domain())
+        if (valuePair.first == domain_key)
         {
             continue;
         }

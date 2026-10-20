@@ -20,8 +20,9 @@ inline void CurlEasy::setOption(InputIterator first, InputIterator last)
 }
 
 template <typename T>
-inline void CurlEasy::getInfo(CURLINFO info, T& value) const
+inline bool CurlEasy::getInfo(CURLINFO info, T& value) const
 {
     const CURLcode code = curl_easy_getinfo(handle(), info, &value);
+    return code == CURLE_OK;
 }
 }  // namespace network

@@ -4,6 +4,21 @@
 
 namespace network
 {
+namespace detail
+{
+inline bool requestSucceeded(CurlEasy& easy, bool performed)
+{
+    if (!performed)
+        return false;
+
+    long status = 0;
+    const bool gotStatus = easy.getInfo(CURLINFO_RESPONSE_CODE, status);
+    if (!gotStatus)
+        return false;
+    return status < 400;
+}
+}  // namespace detail
+
 template <typename Response>
 inline bool NetWork::request(const std::string& url, Response& response, HttpMethod method)
 {
@@ -17,11 +32,11 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
     setToCurl(easy, CurlOptions(), true);
     writer.setToCurl(easy);
 
-    easy.perform();
+    const bool performed = easy.perform();
 
     writer.readAfter(easy);
 
-    return true;
+    return detail::requestSucceeded(easy, performed);
 }
 
 template <typename Response>
@@ -37,11 +52,11 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
     setToCurl(easy, CurlOptions(), true);
     writer.setToCurl(easy);
 
-    easy.perform();
+    const bool performed = easy.perform();
 
     writer.readAfter(easy);
 
-    return true;
+    return detail::requestSucceeded(easy, performed);
 }
 
 template <typename Response>
@@ -57,11 +72,11 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
     setToCurl(easy, options, optionsAdd);
     writer.setToCurl(easy);
 
-    easy.perform();
+    const bool performed = easy.perform();
 
     writer.readAfter(easy);
 
-    return true;
+    return detail::requestSucceeded(easy, performed);
 }
 
 template <typename Response>
@@ -78,11 +93,11 @@ inline bool NetWork::request(const std::string& url, Response& response, HttpMet
     setToCurl(easy, options, optionsAdd);
     writer.setToCurl(easy);
 
-    easy.perform();
+    const bool performed = easy.perform();
 
     writer.readAfter(easy);
 
-    return true;
+    return detail::requestSucceeded(easy, performed);
 }
 
 template <typename Response>

@@ -1,4 +1,5 @@
 #include "CurlEasy.h"
+#include "CurlGlobal.h"
 
 namespace network
 {
@@ -25,9 +26,10 @@ CurlEasy::~CurlEasy()
 {
 }
 
-void CurlEasy::perform()
+bool CurlEasy::perform()
 {
     const CURLcode code = curl_easy_perform(handle());
+    return code == CURLE_OK;
 }
 
 void CurlEasy::reset()

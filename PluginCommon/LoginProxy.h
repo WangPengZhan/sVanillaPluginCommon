@@ -13,9 +13,7 @@ public:
     LoginProxy(AbstractLoginWeb& login);
     ~LoginProxy() = default;
 
-    LoginProxy(const LoginProxy&) = delete;
     LoginProxy& operator=(const LoginProxy&) = delete;
-    LoginProxy(LoginProxy&&) = delete;
     LoginProxy& operator=(LoginProxy&&) = delete;
 
     UserInfo getUserInfo(std::string dir) override;
