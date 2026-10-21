@@ -123,7 +123,6 @@ struct VideoInfoFull
 
     std::string getGuid() const;
     std::string fileName(bool update = false) const;
-    std::string coverPath() const;
     std::string parseNameRules(const std::string& ruleName) const;
 
     static const std::vector<std::string> ruleList;

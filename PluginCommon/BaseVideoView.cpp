@@ -4,7 +4,7 @@
 #include <sstream>
 #include <ctime>
 
-#include "Util/UrlProccess.h"
+#include "Util/UrlProcess.h"
 #include <iomanip>
 
 namespace
@@ -304,11 +304,6 @@ std::string VideoInfoFull::fileName(bool update) const
     }
 
     return parseNameRules(downloadConfig->nameRule);
-}
-
-std::string VideoInfoFull::coverPath() const
-{
-    return getGuid();
 }
 
 const std::vector<std::string> VideoInfoFull::ruleList = {adapter::id,   adapter::title, adapter::publisher, adapter::publishdate,

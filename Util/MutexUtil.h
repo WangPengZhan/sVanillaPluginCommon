@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace until
+namespace util
 {
 class hysteretic_shared_mutex
 {
@@ -226,4 +226,4 @@ public:
         return {&this->m_value, base_type::m_mutex};
     }
 };
-}  // namespace until
+}  // namespace util

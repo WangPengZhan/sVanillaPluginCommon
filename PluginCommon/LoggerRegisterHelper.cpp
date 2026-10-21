@@ -1,4 +1,4 @@
-#include "LoggerRegisterHelpper.h"
+#include "LoggerRegisterHelper.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -20,7 +20,7 @@ void freeObject(T* obj)
 }
 }  // namespace
 
-void LoggerRegisterHelpper::registerLogger(std::string name, std::string path)
+void LoggerHelper::registerLogger(std::string name, std::string path)
 {
     using rotating_file_sink_mt = spdlog::sinks::rotating_file_sink_mt;
     auto sink =
@@ -29,7 +29,7 @@ void LoggerRegisterHelpper::registerLogger(std::string name, std::string path)
     spdlog::details::registry::instance().initialize_logger(new_logger);
 }
 
-void LoggerRegisterHelpper::unregisterLogger(std::string name)
+void LoggerHelper::unregisterLogger(std::string name)
 {
     spdlog::details::registry::instance().drop(name);
 }

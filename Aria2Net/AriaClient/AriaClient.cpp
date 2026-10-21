@@ -192,7 +192,7 @@ std::string AriaClient::GetToken() const
     return TOKEN;
 }
 
-std::string AriaClient::ConstructSendData(std::string methodName, nlohmann::json::array_t params)
+std::string AriaClient::sendRpcRequest(std::string methodName, nlohmann::json::array_t params)
 {
     AriaSendData data;
     data.id = GetGuid();

@@ -65,7 +65,7 @@ private:
     static constexpr char TOKEN[] = "sVanilla";
     [[nodiscard]] std::string ConstructURL() const;
     [[nodiscard]] std::string GetToken() const;
-    std::string ConstructSendData(std::string methodName, nlohmann::json::array_t params);
+    std::string sendRpcRequest(std::string methodName, nlohmann::json::array_t params);
     std::string Request(const std::string& url, const std::string& params);
 
 private:
@@ -76,7 +76,7 @@ private:
 template <typename Result>
 Result AriaClient::Call(std::string methodName, nlohmann::json::array_t params)
 {
-    std::string res = ConstructSendData(std::move(methodName), std::move(params));
+    std::string res = sendRpcRequest(std::move(methodName), std::move(params));
     if (res.empty())
     {
         return Result();
